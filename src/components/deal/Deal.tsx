@@ -1,5 +1,5 @@
 /* eslint-disable jsx-a11y/alt-text */
-import React from "react";
+import React, { useState, useCallback, useEffect, useRef } from "react";
 import styled from "styled-components";
 import { Link } from "react-router-dom";
 
@@ -7,7 +7,73 @@ import DLBigIcon from "assets/icons/deal-big.png";
 import SearchIcon from "assets/icons/search.png";
 import DealItem from "./item";
 
-function Deal() {
+import { Dealing, Paging } from "stores/market/types";
+
+interface Props {
+  deal: Dealing[];
+  info: string;
+  paging: Paging;
+  getList: (page: number, order: string, query?: string, more?: boolean) => void;
+}
+
+function Deal({ deal, info, paging, getList }: Props) {
+  const searchRef = useRef<HTMLInputElement>(null);
+
+  const [state, setState] = useState({
+    sort: "RECENT|DESC",
+    page: 0,
+    prePage: 0,
+    first: true,
+  });
+
+  // ====================useCallbacks====================
+  const getPageList = useCallback(
+    (e: React.MouseEvent<HTMLButtonElement>) => {
+      e.preventDefault();
+      setState({ ...state, prePage: state.page, page: state.page + 1, first: false });
+    },
+    [state],
+  );
+
+  const sortByRecent = useCallback(
+    (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+      e.preventDefault();
+      if (state.sort === "RECENT|DESC")
+        setState({ ...state, page: 0, prePage: 0, sort: "RECENT|ASC", first: false });
+      else setState({ ...state, page: 0, prePage: 0, sort: "RECENT|DESC", first: false });
+    },
+    [state],
+  );
+
+  const sortByPrice = useCallback(
+    (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+      e.preventDefault();
+      if (state.sort === "PRICE|DESC")
+        setState({ ...state, page: 0, prePage: 0, sort: "PRICE|ASC", first: false });
+      else setState({ ...state, page: 0, prePage: 0, sort: "PRICE|DESC", first: false });
+    },
+    [state],
+  );
+
+  // ====================functions====================
+  const enterPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      // getList(state.page, state.sort, state.search, true);
+      getList(state.page, state.sort, searchRef.current?.value);
+    }
+  };
+
+  // ====================useEffects====================
+  useEffect(() => {
+    if (!state.first) {
+      if (state.prePage !== state.page) {
+        getList(state.page, state.sort, searchRef.current?.value, true);
+      } else {
+        getList(state.page, state.sort, searchRef.current?.value);
+      }
+    }
+  }, [getList, state.sort, state.page, state.first, state.prePage]);
+
   return (
     <Wrap>
       <Link to="/deal/apply" className="coin-avg">
@@ -15,7 +81,7 @@ function Deal() {
           <img src={DLBigIcon} />
           <div>
             <em>금일 딜링 (DL) 평균시세</em>
-            <span>100 KRW</span>
+            <span>{info} KRW</span>
           </div>
         </div>
         <span className="apply">판매 등록하기 ></span>
@@ -27,16 +93,16 @@ function Deal() {
         </div>
         <div className="result-box">
           <span>전체결과</span>
-          <select>
-            <option>최신순</option>
+          <select style={{ border: "none" }}>
+            <option>전체</option>
             <option>관심상품</option>
           </select>
         </div>
 
         <div className="item-list">
-          <DealItem />
-          <DealItem />
-          <DealItem />
+          {deal.map((data, idx) => (
+            <DealItem deal={data} key={idx} />
+          ))}
         </div>
       </div>
     </Wrap>
@@ -56,6 +122,10 @@ width: 100%;
     align-items: center;
 
     padding: 12px;
+
+    z-index: 999;
+
+
 
     & > .avg-info{
         display: flex;
@@ -110,6 +180,8 @@ width: 100%;
 }
 
 & > .content {
+
+  margin-bottom: 52px;
         
     & > .result-box {
         width: 100%;

@@ -5,16 +5,20 @@ export type User = {
   phone: string;
   birth: Date;
   sex: string;
-  createdDate: Date;
-  modifiedDate: Date;
+  created_at: Date;
+  updated_at?: Date;
 };
+
+export enum AccountType {
+  COIN_POINT = "COIN_POINT",
+  DILLING = "DILLING",
+  DILLING_COIN = "DILLING_COIN",
+}
 
 export type Account = {
   id: string;
-  user_id: number;
-  // balance: number;
-  dl: number;
-  cp: number;
-  createdDate: Date;
-  modifiedDate: Date;
+  type: AccountType;
+  quantity: number;
+  created_at: Date;
+  updated_at?: Date;
 };

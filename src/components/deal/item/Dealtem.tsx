@@ -5,21 +5,27 @@ import styled from "styled-components";
 import DLCoinIcon from "assets/icons/dl-coin.png";
 import KRWIcon from "assets/icons/krw-coin.png";
 import PBOIcon from "assets/icons/pbo.png";
+import { Dealing } from "stores/market/types";
+import regex from "lib/regex";
 
-function DealItem() {
+interface Props {
+  deal: Dealing;
+}
+
+function DealItem({ deal }: Props) {
   return (
     <Wrap>
       <div className="deal-info">
-        <em>100KRW / 1DL&emsp;5분전</em>
+        <em>{deal.price * 1}KRW / 1DL&emsp;5분전</em>
       </div>
       <div className="coin-info">
         <span>
           <img src={DLCoinIcon} />
-          <em>100 DL</em>
+          <em>{deal.quantity * 1} DL</em>
         </span>
         <span>
           <img src={KRWIcon} />
-          <em> 10,000 KRW</em>
+          <em> {regex.moneyRegex(deal.quantity * deal.price)} KRW</em>
         </span>
       </div>
       <div className="seller">

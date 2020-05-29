@@ -5,11 +5,17 @@ import { Link } from "react-router-dom";
 
 import Modal from "components/common/modal";
 
+import { Account } from "stores/users/types";
+
 import DLIcon from "assets/icons/dl-coin.png";
 import ImportIcon from "assets/icons/import.png";
 import ExportIcon from "assets/icons/export.png";
 
-function CoinItem() {
+interface Props {
+  account: Account;
+}
+
+function CoinItem({ account }: Props) {
   const [sendOpen, setSendOpen] = useState<boolean>(false);
 
   const handleSendOpen = () => {
@@ -35,12 +41,13 @@ function CoinItem() {
         <img src={DLIcon} />
         <span className="info-box">
           <em className="info-title">딜링(DL)</em>
-          <em>A2345E789</em>
+          <em>{account && account.id}</em>
         </span>
       </span>
       <div className="deal-box">
         <span className="coin-price">
-          100,000<em> DL</em>
+          {/* {account && account.dl} */}
+          <em> DL</em>
         </span>
         <div className="deal-btns">
           <button onClick={handleSendOpen}>

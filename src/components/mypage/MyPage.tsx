@@ -13,9 +13,10 @@ import CPIcon from "assets/icons/cp-coin.png";
 
 interface Props {
   isLoggined: boolean;
+  logout: () => void;
 }
 
-function MyPage({ isLoggined }: Props) {
+function MyPage({ isLoggined, logout }: Props) {
   return (
     <Wrap>
       <div className="user-info">
@@ -52,7 +53,7 @@ function MyPage({ isLoggined }: Props) {
                   로그인
                 </a>
               </div>
-              <button>로그아웃</button>
+              <button>회원가입</button>
             </div>
           </>
         )}

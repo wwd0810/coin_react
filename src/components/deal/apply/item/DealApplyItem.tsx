@@ -1,7 +1,8 @@
 /* eslint-disable jsx-a11y/alt-text */
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, ChangeEvent } from "react";
 import styled from "styled-components";
-import { Link } from "react-router-dom";
+
+import { Account } from "stores/users/types";
 
 import OpenIcon from "assets/icons/open.png";
 import PlusIcon from "assets/icons/plus.png";
@@ -9,8 +10,15 @@ import MinusIcon from "assets/icons/minus.png";
 import MinIcon from "assets/icons/min.png";
 import MaxIcon from "assets/icons/max.png";
 
-function DealApplyItem() {
-  const [open, setOpen] = useState<boolean>(false);
+interface Props {
+  account: Account;
+  postSell: (quantity: number, price: number) => void;
+}
+
+function DealApplyItem({ account, postSell }: Props) {
+  const [open, setOpen] = useState<boolean>(true);
+  const [price, setPrice] = useState<string>("");
+  const [quantity, setQuantity] = useState<string>("");
 
   const handleOpen = useCallback(
     (e: any) => {
@@ -20,6 +28,41 @@ function DealApplyItem() {
     },
     [open],
   );
+
+  const onChangePrice = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    e.preventDefault();
+
+    const { value } = e.target;
+
+    setPrice(value);
+  }, []);
+
+  const onChangeQuantity = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    e.preventDefault();
+
+    const { value } = e.target;
+
+    setQuantity(value);
+  }, []);
+
+  const onPost = useCallback((e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+    e.preventDefault();
+    // if (quantity && price) {
+    //   const quan = Number(quantity);
+    //   const pri = Number(price);
+    //   if (quan > 0 && pri > 0) {
+    //     if (account.dl >= Number(quantity)) {
+    //       postSell(Number(quantity), Number(price));
+    //     } else {
+    //       alert("보유수량 보다 많음.");
+    //     }
+    //   } else {
+    //     alert("0 은 앙대");
+    //   }
+    // } else {
+    //   alert("입력칸을 모두 채워주세요.");
+    // }
+  }, []);
 
   return (
     <Wrap>
@@ -31,12 +74,12 @@ function DealApplyItem() {
         <div className="info">
           <div className="my-coin">
             <em>보유수량</em>
-            <span>520 DLC</span>
+            <span> DLC</span>
           </div>
           <div className="apply-coin">
             <div>
               <em>판매수량</em>
-              <input type="number" />
+              <input type="number" onChange={onChangeQuantity} value={quantity} />
             </div>
             <span className="btn-wrap">
               <button>All</button>
@@ -49,7 +92,12 @@ function DealApplyItem() {
             <div>
               <em>개당가격</em>
               <div className="input-wrap">
-                <input type="number" />
+                <input
+                  type="number"
+                  style={{ paddingRight: "70px" }}
+                  onChange={onChangePrice}
+                  value={price}
+                />
                 <button>
                   <img src={MinusIcon} />
                 </button>
@@ -81,7 +129,7 @@ function DealApplyItem() {
 
           <div className="btn-box">
             <button>초기화</button>
-            <Link to="/keypad/apply">다음</Link>
+            <button onClick={onPost}>다음</button>
           </div>
           <div className="notice">
             - 1일 최대 5,000 DL까지 전송가능합니다.

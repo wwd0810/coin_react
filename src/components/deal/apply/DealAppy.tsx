@@ -1,11 +1,36 @@
-import React from "react";
+import React, { useState } from "react";
 import styled from "styled-components";
 import DealApplyItem from "./item";
+import { User, Account } from "stores/users/types";
 
-function DealApply() {
+import Keypad from "components/common/keypad";
+
+interface Props {
+  user: { user: User; account: Account };
+  postSell: (quantity: number, price: number) => void;
+}
+
+function DealApply({ user, postSell }: Props) {
+  let quantity = 0;
+  let price = 0;
+
+  const [open, setOpen] = useState<boolean>(false);
+
+  const onPost = (quantity: number, price: number) => {
+    quantity = quantity;
+    price = price;
+
+    setOpen(true);
+  };
+
+  const handleClose = () => {
+    setOpen(false);
+  };
+
   return (
     <Wrap>
-      <DealApplyItem />
+      {open && <Keypad onPrev={handleClose} />}
+      <DealApplyItem account={user.account} postSell={onPost} />
     </Wrap>
   );
 }

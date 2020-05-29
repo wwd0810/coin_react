@@ -16,6 +16,26 @@ class UserService {
       }),
     );
   }
+
+  public GetUserAPI() {
+    return client.get(`/api/users/me`);
+  }
+
+  public GetUserSyncAPI() {
+    return client.get(`/api/users/me/sync`);
+  }
+
+  public GetUserAccountAPI() {
+    return client.get(`/api/users/me/account`);
+  }
+
+  public UpdateFcmTokenAPI(data: FormData) {
+    return client.put(`/api/users/me/token`, data);
+  }
+
+  public GetUserPurchasesAPI(page: number) {
+    return client.get(`/api/users/me/purchases`, { params: { page: page } });
+  }
 }
 
 export default new UserService();

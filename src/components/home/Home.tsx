@@ -4,25 +4,26 @@ import { Link } from "react-router-dom";
 
 import Carousle from "components/common/carousle";
 import CoinItem from "./item";
+import { Account } from "stores/users/types";
 
-function Home() {
+interface Props {
+  // account: Account[];
+}
+
+function Home({}: Props) {
   return (
     <Wrap>
       <Carousle />
       <Link to="/point/charge" className="my-point">
         <span>
           <span className="point-box">내 포인트</span>
-          <em>100,000 CP</em>
+          <em> CP</em>
         </span>
         <span className="charging">충전하기 ></span>
       </Link>
 
       <div className="item-list">
-        <CoinItem />
-        <CoinItem />
-        <CoinItem />
-        <CoinItem />
-        <CoinItem />
+        {/* <CoinItem account={account} /> */}
 
         <div className="add-coin">+</div>
       </div>

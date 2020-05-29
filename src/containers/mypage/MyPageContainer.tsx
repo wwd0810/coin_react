@@ -14,8 +14,15 @@ interface Props extends RouteComponentProps, ReactCookieProps {
 @observer
 class MyPageContainer extends React.Component<Props> {
   private userStore = this.props.userStore! as UserStore;
+
+  logout = async () => {
+    this.userStore.logout();
+    this.props.cookies!.remove("auth", { path: "/" });
+    this.props.history.push("/");
+  };
+
   render() {
-    return <MyPage isLoggined={this.userStore.IsLoggedIn} />;
+    return <MyPage isLoggined={this.userStore.IsLoggedIn} logout={this.logout} />;
   }
 }
 

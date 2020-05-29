@@ -6,7 +6,7 @@ import classnames from "classnames";
 import PrevIcon from "assets/icons/prev.png";
 
 interface Props {
-  onPrev: () => void;
+  onPrev?: () => void;
 }
 
 function Keypad({ onPrev }: Props) {
@@ -70,14 +70,20 @@ function Keypad({ onPrev }: Props) {
 }
 
 const Wrap = styled.div`
-width: 100vw;
-height: 100vh;
+position: absolute;
+top: 0px;
+bottom: 0px;
+right: 0px;
+left: 0px;
 
 display: flex;
 flex-direction: column;
 
 justify-content: center;
 align-items: center;
+background: white;
+
+z-index: 999;
 
 & > img {
     width: 24px;

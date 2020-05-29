@@ -6,11 +6,11 @@ import { Helmet } from "react-helmet";
 import { inject, observer } from "mobx-react";
 
 import Loading from "components/common/loading";
-import KeypadPage from "pages/keypad/KeypadPage";
 import DealSendPage from "pages/deal/DealSendPage";
 import CallbackPage from "pages/user/CalllbackPage";
 
 import UserStore from "stores/users";
+import client from "lib/client";
 
 interface Props extends RouteComponentProps, ReactCookieProps {
   userStore?: UserStore;
@@ -19,6 +19,10 @@ interface Props extends RouteComponentProps, ReactCookieProps {
 interface PrivateRouteProps extends RouteProps {
   component: React.ComponentType<{}>;
   role: string[] | string;
+}
+
+interface State {
+  isLoading: boolean;
 }
 
 const HomePage = React.lazy(() => import("pages/home/HomePage"));
@@ -34,14 +38,54 @@ const ServicePage = React.lazy(() => import("pages/center/service/ServicePage"))
 
 @inject("userStore")
 @observer
-class App extends React.Component<Props> {
+class App extends React.Component<Props, State> {
   private UserStore = this.props.userStore! as UserStore;
+
+  state = {
+    isLoading: true,
+  };
+
+  async componentDidMount() {
+    // ================================================================================
+    //  자동로그인 및 토큰 설정
+    // ================================================================================
+
+    const auth = window.localStorage.getItem("auth");
+    if (auth) {
+      const LoginData: string = auth;
+      client.defaults.headers.common["Authorization"] = `Bearer ${LoginData}`;
+      await this.UserStore.GetUser();
+    }
+
+    // ================================================================================
+    // 브라우저 검증
+    // ================================================================================
+    const agent = navigator.userAgent.toLowerCase();
+    if (
+      (navigator.appName === "Netscape" && navigator.userAgent.search("Trident") !== -1) ||
+      agent.indexOf("msie") !== -1
+    ) {
+      alert(
+        "Microsoft Internet Explore를 지원하지 않습니다.\nChrome, Edge, Safari, Firefox 등의 브라우저를 이용해주세요.",
+      );
+    }
+
+    // ================================================================================
+    //  FCM
+    // ================================================================================
+    window.receiveToken = (str: string) => {
+      this.UserStore.UpdateFcmToken(str);
+    };
+
+    this.setState({ isLoading: false });
+  }
+
   PrivateRoute = ({ component: Component, ...other }: PrivateRouteProps) => {
     return (
       <Route
         {...other}
         render={(props: any) => {
-          // if (this.state.isLoading) return null;
+          if (this.state.isLoading) return null;
           if (!this.UserStore.IsLoggedIn) {
             alert("로그인이 필요합니다.");
             return <Redirect to="/" />;
@@ -88,7 +132,6 @@ class App extends React.Component<Props> {
               role="Login"
               component={PointHistoryPage}
             />
-            <this.PrivateRoute exact path="/keypad/:title" role="Login" component={KeypadPage} />
             <this.PrivateRoute exact path="/center/service" role="Login" component={ServicePage} />
           </Switch>
         </Suspense>
