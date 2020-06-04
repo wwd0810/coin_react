@@ -1,32 +1,153 @@
 /* eslint-disable jsx-a11y/alt-text */
-import React from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import styled from "styled-components";
 
 import SearchIcon from "assets/icons/search.png";
 import DealSendItem from "./item/DealSendItem";
+import { Account } from "stores/users/types";
+import Modal from "components/common/modal";
 
-function DealSend() {
+interface Props {
+  modalOpen: boolean;
+  close: () => void;
+  duplicate: (pw: string) => void;
+  check: boolean;
+  goback: () => void;
+  accounts?: Account[];
+  findUser: (type: string, query: string) => void;
+  findAccounts: Account[];
+  post: (to: string, type: string, amount: string) => void;
+}
+
+function DealSend({
+  modalOpen,
+  accounts,
+  goback,
+  findUser,
+  findAccounts,
+  post,
+  check,
+  duplicate,
+}: Props) {
+  const [option, setOption] = useState<number>(0);
+
+  const [search, setSearch] = useState<string>("");
+
+  const [res, setRes] = useState<string>("");
+
+  const onChangeOption = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
+    e.preventDefault();
+
+    const { value } = e.target;
+
+    setRes("");
+    setSearch("");
+    setOption(Number(value));
+  }, []);
+
+  const enterPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      let tmp = "";
+
+      if (option === 0) tmp = "PHONE";
+      if (option === 1) tmp = "USERNAME";
+
+      findUser(tmp, search);
+    }
+  };
+
+  const searchPress = (e: any) => {
+    let tmp = "";
+
+    if (option === 0) tmp = "PHONE";
+    if (option === 1) tmp = "USERNAME";
+
+    findUser(tmp, search);
+  };
+
+  const onChangeSearch = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    e.preventDefault();
+
+    const { value } = e.target;
+
+    setSearch(value);
+  }, []);
+
+  const onChangeRes = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    e.preventDefault();
+
+    const { value } = e.target;
+
+    setRes(value);
+  }, []);
+
+  const postSend = (price: string) => {
+    post(res, "DILLING", price);
+  };
+
+  useEffect(() => {
+    if (findAccounts.length > 0) {
+      const addr = findAccounts.filter((data) => data.type === "DILLING");
+      if (addr) {
+        setRes(addr[0].id);
+      } else {
+        alert("해당 유저 주소가 없습니다.");
+      }
+    }
+    // if (addr) {
+    //   setRes(addr);
+    // }
+  }, [findAccounts]);
+
   return (
     <Wrap>
+      <Modal open={modalOpen} close={goback} title="전송완료">
+        <ul>
+          <li>딜링(DL)전송이</li>
+          <li>정상적으로 완료되었습니다.</li>
+        </ul>
+      </Modal>
       <div className="p-box">
         <div className="title">받는사람</div>
         <div className="search">
-          <select>
-            <option>연락처</option>
-            <option>아이디</option>
-            <option>직접입력</option>
+          <select onChange={onChangeOption} value={option}>
+            <option value={0}>연락처</option>
+            <option value={1}>아이디</option>
+            <option value={2}>직접입력</option>
           </select>
           <span className="input-box">
-            <input type="text" />
-            <img src={SearchIcon} />
+            <input
+              type="text"
+              readOnly={option === 2 ? true : false}
+              value={search}
+              onChange={onChangeSearch}
+              onKeyDown={enterPress}
+            />
+            <img src={SearchIcon} onClick={searchPress} />
           </span>
         </div>
         <span>
-          <input type="text" readOnly />
+          <input
+            type="text"
+            readOnly={option !== 2 ? true : false}
+            value={res}
+            onChange={onChangeRes}
+          />
         </span>
       </div>
       <div className="c-box">
-        <DealSendItem />
+        {accounts
+          ?.filter((data) => data.type !== "COIN_POINT")
+          .map((data, idx) => (
+            <DealSendItem
+              check={check}
+              duplicate={duplicate}
+              account={data}
+              key={idx}
+              post={postSend}
+              addr={res}
+            />
+          ))}
       </div>
     </Wrap>
   );
@@ -52,9 +173,7 @@ padding: 23px 16px;;
     margin-bottom: 32px;
 
     & > span {
-        & > input {
-            background: #EEEEEE
-        }
+        
     }
     & > .title {
         display: flex;

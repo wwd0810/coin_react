@@ -12,13 +12,14 @@ interface Props extends ReactCookieProps, RouteComponentProps {
   seletedItem: string;
   main?: boolean;
   title?: string;
+  my?: boolean;
 }
 
 class BaseTemplate extends React.Component<Props> {
   render() {
     return (
       <Wrap>
-        <Header main={this.props.main} title={this.props.title} />
+        {!this.props.my && <Header main={this.props.main} title={this.props.title} />}
         <WebHeader title={this.props.title} />
         <Section>
           <div className="content">{this.props.children}</div>

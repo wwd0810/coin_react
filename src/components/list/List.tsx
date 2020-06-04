@@ -1,5 +1,5 @@
 /* eslint-disable jsx-a11y/alt-text */
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import styled from "styled-components";
 import classnames from "classnames";
 
@@ -7,17 +7,122 @@ import SearchIcon from "assets/icons/search.png";
 import SellItem from "./sell";
 import BuyItem from "./buy";
 import SendItem from "./send";
+import { Dealing, Paging } from "stores/market/types";
+import { PointType, Account } from "stores/users/types";
 
-function List() {
+interface Props {
+  histories: Dealing[];
+  buyList: Dealing[];
+  pointList: PointType[];
+  paging?: Paging;
+  pointPaging?: Paging;
+
+  account?: Account;
+
+  // 판매 내역 관련
+  getList: (page: number, status: string, duration: string, more?: boolean) => void;
+  del: (idx: number) => void;
+  deny: (id: number, purId: number, reason: string) => void;
+  accept: (id: number, purId: number) => void;
+  done: (id: number, purId: number) => void;
+  buyerReport: (id: number, purId: number, reason: string) => void;
+
+  // 구매 내역 관련
+  getBuyList: (page: number, status: string, duration: string, more?: boolean) => void;
+  deposit: (id: number, purId: number) => void;
+  cancle: (id: number, purId: number) => void;
+  sellerRepost: (id: number, purId: number, reason: string) => void;
+
+  // 전송 내역 관련
+  getSendList: (page: number) => void;
+}
+
+function List({
+  histories,
+  getList,
+  paging,
+  getSendList,
+  pointList,
+  del,
+  deny,
+  accept,
+  done,
+  buyerReport,
+  getBuyList,
+  deposit,
+  sellerRepost,
+  buyList,
+  cancle,
+  pointPaging,
+  account,
+}: Props) {
   const [selected, setSelected] = useState<number>(0);
+  const [page, setPage] = useState<number>(0);
+  const [status, setStatus] = useState<string>("");
+  const [duration, setDuration] = useState<string>("");
+  const [search, setSearch] = useState<string>("");
+  const [more, setMore] = useState<boolean>(false);
 
   const onChangeMenu = useCallback((e: any) => {
     e.preventDefault();
 
     const { id } = e.target;
 
+    setPage(0);
+
     setSelected(Number(id));
   }, []);
+
+  const getPageList = () => {
+    setPage(page + 1);
+    setMore(true);
+  };
+
+  const onChangeStatus = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
+    e.preventDefault();
+
+    const { value } = e.target;
+
+    setStatus(value);
+  }, []);
+
+  const onChangeDuration = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
+    e.preventDefault();
+
+    const { value } = e.target;
+
+    setDuration(value);
+  }, []);
+
+  const onChangeSearch = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    e.preventDefault();
+
+    const { value } = e.target;
+
+    setSearch(value);
+  }, []);
+
+  const deleteMarket = (idx: number) => {
+    del(idx);
+  };
+
+  useEffect(() => {
+    if (selected === 2) {
+      getSendList(page);
+    } else if (selected === 1) {
+      getBuyList(page, status, duration, more);
+    } else if (selected === 0) {
+      getList(page, status, duration, more);
+    }
+    console.log(1);
+  }, [duration, getList, more, page, status, selected, getSendList, getBuyList]);
+
+  //  {/* <SellItem type="sell" />
+  //           <SellItem type="apply" />
+  //           <SellItem type="wait" />
+  //           <SellItem type="init" />
+  //           <SellItem type="finish" />
+  //           <SellItem type="expiration" /> */}
 
   return (
     <Wrap>
@@ -55,16 +160,33 @@ function List() {
         <div className="search-box">
           {selected !== 2 ? (
             <div className="select-box">
-              <select>
-                <option>전체(기간)</option>
+              <select value={duration} onChange={onChangeDuration}>
+                <option value="">전체(기간)</option>
+                <option value="TODAY">오늘</option>
+                <option value="1WEEK">1주일</option>
+                <option value="1MONTH">1개월</option>
+                <option value="3MONTH">3개월</option>
+                <option value="6MONTH">6개월</option>
+                <option value="1YEAR">1년</option>
               </select>
-              <select>
-                <option>전체(상태)</option>
+              <select value={status} onChange={onChangeStatus}>
+                <option value="">전체(상태)</option>
+                <option value="INIT">판매중</option>
+                <option value="PURCHASE_REQUEST_RECEIVED">구매신청받음</option>
+                <option value="WAITING_FOR_DEPOSIT">입금대기중</option>
+                <option value="DONE ">입금완료</option>
+                <option value="DONE ">거래완료</option>
+                <option value="EXPIRED">기간만료</option>
               </select>
             </div>
           ) : null}
           <div className="input-box">
-            <input type="text" />
+            <input
+              type="text"
+              value={search}
+              onChange={onChangeSearch}
+              placeholder="물품번호 검색"
+            />
             <img src={SearchIcon} />
           </div>
         </div>
@@ -72,7 +194,7 @@ function List() {
       <div className="bottom-box">
         <span className="result-box">
           <em>전체결과</em>
-          <select style={{ width: "72px" }}>
+          <select style={{ width: "72px", border: "none" }}>
             {selected !== 2 ? (
               <>
                 <option>최신순</option>
@@ -88,28 +210,58 @@ function List() {
         </span>
         {selected === 0 ? (
           <>
-            <SellItem type="sell" />
-            <SellItem type="apply" />
-            <SellItem type="wait" />
-            <SellItem type="init" />
-            <SellItem type="finish" />
-            <SellItem type="expiration" />
+            {histories &&
+              histories.map((data, idx) => (
+                <SellItem
+                  {...data}
+                  type={data.status}
+                  key={idx}
+                  del={deleteMarket}
+                  deny={deny}
+                  accept={accept}
+                  done={done}
+                  report={buyerReport}
+                />
+              ))}
+            {paging && page < paging.count / paging.limit - 1 && (
+              <button className="more-btn" onClick={getPageList}>
+                더보기
+              </button>
+            )}
           </>
         ) : selected === 1 ? (
           <>
-            <BuyItem type="apply" />
+            {buyList &&
+              buyList.map((data, idx) => (
+                <BuyItem
+                  {...data}
+                  key={idx}
+                  deposit={deposit}
+                  report={sellerRepost}
+                  cancle={cancle}
+                />
+              ))}
+            {paging && page < paging.count / paging.limit - 1 && (
+              <button className="more-btn" onClick={getPageList}>
+                더보기
+              </button>
+            )}
+            {/* <BuyItem type="apply" />
             <BuyItem type="accept" />
             <BuyItem type="wait" />
             <BuyItem type="finish" />
-            <BuyItem type="expiration" />
+            <BuyItem type="expiration" /> */}
           </>
         ) : (
           <>
-            <SendItem type="deposit" />
-            <SendItem type="send" />
-            <SendItem type="transform" />
-            <SendItem type="buy" />
-            <SendItem type="sell" />
+            {pointList.map((data, idx) => (
+              <SendItem key={idx} {...data} account={account} />
+            ))}
+            {pointPaging && page < pointPaging.count / pointPaging.limit - 1 && (
+              <button className="more-btn" onClick={getPageList}>
+                더보기
+              </button>
+            )}
           </>
         )}
       </div>
@@ -121,7 +273,21 @@ const Wrap = styled.div`
 
 width: 100%;
 
+.more-btn {
+  width: 100%;
+  height: 32px;
+
+  font-size: 14px;
+  line-height: 19px;
+  color: #444444;
+
+  background: #FFFFFF;
+  border: 1px solid #DDDDDD;
+}
+
 & > .bottom-box {
+
+  margin-bottom: 72px;
 
   & > .result-box {
     height: 40px;
@@ -166,7 +332,7 @@ width: 100%;
         width:50%;
         border: 1px solid  ${({ theme }) => theme.colors.grey_color};
 
-        border-radius: 0;
+       
       }
 
       & > select:first-child {

@@ -10,23 +10,27 @@ import CSIcon from "assets/icons/cashlink-icon.png";
 import BAIcon from "assets/icons/bazaro-icon.png";
 import GLIcon from "assets/icons/global-icon.png";
 import CPIcon from "assets/icons/cp-coin.png";
+import { UserActivity } from "stores/users/types";
+import { User } from "stores/users/types";
 
 interface Props {
   isLoggined: boolean;
+  userAct?: UserActivity;
+  user?: User;
   logout: () => void;
 }
 
-function MyPage({ isLoggined, logout }: Props) {
+function MyPage({ isLoggined, userAct, logout, user }: Props) {
   return (
     <Wrap>
       <div className="user-info">
         {isLoggined ? (
           <>
             <div className="loggined">
-              <Link to="" className="main-info">
+              <Link to="/mypage/modify" className="main-info">
                 <span>
-                  <img src={PBOIcon} />
-                  HOJOGroup <em>님</em>
+                  {/* <img src={PBOIcon} /> */}
+                  {user?.name} <em>님</em>
                 </span>
                 <img src={SAIcon} />
               </Link>
@@ -35,7 +39,7 @@ function MyPage({ isLoggined, logout }: Props) {
             <div className="auth-info">
               <span>보안 2 등급</span>
               <div>
-                <em style={{ color: "#FF9900" }}>본인인증 v</em>
+                <em style={{ color: "#00AAFF" }}>본인인증 v</em>
                 <em>계좌인증 x</em>
               </div>
             </div>
@@ -53,7 +57,13 @@ function MyPage({ isLoggined, logout }: Props) {
                   로그인
                 </a>
               </div>
-              <button>회원가입</button>
+              <div>
+                <a
+                  href={`${process.env.REACT_APP_AUTH_API_BASE}/oauth/authorize?client_id=cashlink&redirect_uri=${process.env.REACT_APP_REDIRECT_URI}&response_type=code`}
+                >
+                  회원가입
+                </a>
+              </div>
             </div>
           </>
         )}
@@ -63,17 +73,17 @@ function MyPage({ isLoggined, logout }: Props) {
           <span>나의 활동</span>
           <div>
             <div>
-              <span>0</span>
+              <span>{userAct?.sell}</span>
               <p>판매중</p>
             </div>
             <em />
             <div>
-              <span>0</span>
+              <span>{userAct?.buy}</span>
               <p>구매중</p>
             </div>
             <em />
             <div>
-              <span>0</span>
+              <span>{userAct?.like}</span>
               <p>관심상품</p>
             </div>
           </div>
@@ -125,8 +135,11 @@ function MyPage({ isLoggined, logout }: Props) {
         <Link to="/center/service">
           서비스 문의 <img src={SAIcon} />
         </Link>
-        <Link to="" className="term">
+        <Link to="/term" className="term">
           약관 및 정책 <img src={SAIcon} />
+        </Link>
+        <Link to="/business-info">
+          사업자정보 보러가기 <img src={SAIcon} />
         </Link>
       </div>
     </Wrap>
@@ -136,6 +149,8 @@ function MyPage({ isLoggined, logout }: Props) {
 const Wrap = styled.div`
 
 width: 100%;
+
+margin-bottom: 72px;
 
 
 &  > .my-activity {

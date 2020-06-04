@@ -1,9 +1,19 @@
 import React, { useState, useCallback } from "react";
 import styled from "styled-components";
 import classnames from "classnames";
+import { Account, User } from "stores/users/types";
+import regex from "lib/regex";
 
-function PointCharge() {
+interface Props {
+  user?: User;
+  account?: Account;
+  chargePoint: (amount: number) => void;
+}
+
+function PointCharge({ account, chargePoint, user }: Props) {
   const [selected, setSelected] = useState<number>(0);
+  const [charge, setCharge] = useState<string>("");
+  const [check, setCheck] = useState<boolean>(false);
 
   const onSelectedChange = useCallback((e: any) => {
     e.preventDefault();
@@ -13,6 +23,95 @@ function PointCharge() {
     setSelected(Number(id));
   }, []);
 
+  const onChangeCharge = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    e.preventDefault();
+
+    const { value } = e.target;
+
+    setCharge(value);
+  }, []);
+
+  const checkMobileDevice = () => {
+    var mobileKeyWords = [
+      "Android",
+      "iPhone",
+      "iPod",
+      "BlackBerry",
+      "Windows CE",
+      "SAMSUNG",
+      "LG",
+      "MOT",
+      "SonyEricsson",
+    ];
+    for (var info in mobileKeyWords) {
+      if (navigator.userAgent.match(mobileKeyWords[info]) != null) {
+        return true;
+      }
+    }
+
+    return false;
+  };
+
+  const postPoint = useCallback(() => {
+    if (check && charge) {
+      const code = "imp01304231";
+
+      const payData = {
+        pg: "inicis",
+        pay_method: "card",
+        merchant_uid: `mid_${new Date().getTime()}`, // 주문번호
+        name: "CP 포인트 충전",
+        amount: charge,
+        buyer_name: user ? user.name : "", // 구매자 이름
+        buyer_tel: user ? user.phone : "", // 구매자 전화번호
+      };
+
+      if (Number(charge) <= 0) {
+        alert("충전수량을 입력해주세요.");
+
+        return;
+      }
+
+      if (checkMobileDevice()) {
+        const params = {
+          userCode: code, // 가맹점 식별코드
+          payData, // 결제 데이터
+          type: "payment", // 결제와 본인인증 구분을 위한 필드
+          url: window.location.href,
+        };
+
+        const paramsToString = JSON.stringify(params);
+        window.ReactNativeWebView?.postMessage(paramsToString);
+        return;
+      }
+
+      const { IMP } = window;
+      IMP.init(code);
+
+      IMP.request_pay(payData, function (rsp: any) {
+        // callback
+        if (rsp.success) {
+          alert(rsp);
+          chargePoint(Number(charge));
+        } else {
+          alert("결제에 실패하였습니다.");
+        }
+      });
+    } else {
+      if (!charge) {
+        alert("충전 수량을 입력해주세요.");
+
+        return;
+      }
+
+      if (!check) {
+        alert("개인정보 제 3자 제공 및 위탁동의에 동의해주세요.");
+
+        return;
+      }
+    }
+  }, [charge, chargePoint, check, user]);
+
   return (
     <Wrap>
       <div className="point-box">
@@ -20,19 +119,26 @@ function PointCharge() {
         <div className="detail">
           <div>
             <em>보유수량</em>
-            <span className="my">520 CP</span>
+            <span className="my">{regex.moneyRegex(Number(account?.quantity))} CP</span>
           </div>
           <div className="charge">
             <div>
               <em>충전수량</em>
-              <input type="number" />
+              <input
+                type="number"
+                pattern="[0-9]*"
+                inputMode="decimal"
+                value={charge}
+                onChange={onChangeCharge}
+              />
             </div>
-            <span>= 20,000 원</span>
+            <span>= {charge} 원</span>
           </div>
           <div>
             <em>충전결과</em>
             <span className="result">
-              20,520<em> CP</em>
+              {account && Number(account?.quantity) + Number(charge)}
+              <em> CP</em>
             </span>
           </div>
         </div>
@@ -69,9 +175,10 @@ function PointCharge() {
             </div>
           )}
           <span>
-            <input type="checkbox" /> 개인정보 제 3자 제공 및 위탁동의
+            <input type="checkbox" onClick={() => setCheck(!check)} /> 개인정보 제 3자 제공 및
+            위탁동의
           </span>
-          <button>결제하기</button>
+          <button onClick={postPoint}>결제하기</button>
           <div className="notice">
             - 유의사항을 적어주세요.
             <br />

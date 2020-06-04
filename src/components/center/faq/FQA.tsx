@@ -1,11 +1,28 @@
-import React from "react";
+import React, { useState } from "react";
 import styled from "styled-components";
 import FQAItem from "./item/FQAItem";
+import { FAQType } from "stores/notice/types";
 
-function FQA() {
+interface Props {
+  list: FAQType[];
+}
+
+function FQA({ list }: Props) {
+  const [selected, setSelected] = useState<number>();
+
+  const onClick = (id: number) => {
+    if (selected === id) {
+      setSelected(undefined);
+    } else {
+      setSelected(id);
+    }
+  };
+
   return (
     <Wrap>
-      <FQAItem />
+      {list.map((data, idx) => (
+        <FQAItem {...data} onClick={onClick} id={idx} selected={selected!} key={idx} />
+      ))}
     </Wrap>
   );
 }

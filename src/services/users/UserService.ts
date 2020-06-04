@@ -17,6 +17,20 @@ class UserService {
     );
   }
 
+  public RefreshTokenAPI(code: string | string[]) {
+    return auth.post(
+      `/oauth/token`,
+      qs.stringify({
+        client_id: `${process.env.REACT_APP_CLIENT_ID}`,
+        client_secret: `${process.env.REACT_APP_ENCRYPT_KEY}`,
+        grant_type: `${process.env.REACT_APP_REFRESH_GRANT_TYPE}`,
+        refresh_token: code,
+        scope: "read write",
+        // redirect_uri: `${process.env.REACT_APP_REDIRECT_URI}`,
+      }),
+    );
+  }
+
   public GetUserAPI() {
     return client.get(`/api/users/me`);
   }
@@ -35,6 +49,31 @@ class UserService {
 
   public GetUserPurchasesAPI(page: number) {
     return client.get(`/api/users/me/purchases`, { params: { page: page } });
+  }
+
+  public GetUserActivityAPI() {
+    return client.get(`/api/users/me/market`);
+  }
+
+  public GetSearchAPI(type: string, query: string) {
+    return client.get(`/api/users/search`, { params: { type, query } });
+  }
+
+  public PostSendAPI(from: string, to: string, type: string, amount: string) {
+    return client.post(`/api/users/me/account/remit`, {
+      from: from,
+      to: to,
+      type: type,
+      amount: amount,
+    });
+  }
+
+  public PostLikeAPI(idx: number) {
+    return client.post(`/api/markets/${idx}/like`);
+  }
+
+  public GetCPListAPI(code: string, page?: number) {
+    return client.get(`/api/users/me/account/${code}/tx`, { params: { page } });
   }
 }
 

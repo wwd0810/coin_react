@@ -6,6 +6,7 @@ import RootStore from "stores";
 import MarketService from "services/market/MarkerService";
 
 import { Dealing, Paging } from "./types";
+import { User } from "stores/users/types";
 
 class MarketStore extends BaseStore {
   root: RootStore;
@@ -15,7 +16,17 @@ class MarketStore extends BaseStore {
     this.root = root;
   }
   @observable
-  private _averageCondition?: string;
+  private _marketInfo?: {
+    "market.condition": string;
+    "market.buy.user_apply_limit": string;
+    "market.condition_lower": string;
+    "market.condition_upper": string;
+    "market.fees": string;
+    "market.sale.step": string;
+    "market.sale.min": string;
+    "market.sale.user_apply_limit": string;
+    "market.sale.max": string;
+  };
 
   @observable
   private _paging?: Paging;
@@ -30,8 +41,8 @@ class MarketStore extends BaseStore {
   private _mySell: Dealing[] = [];
 
   @computed
-  get AverageCondition() {
-    return this._averageCondition;
+  get MarketInfo() {
+    return this._marketInfo;
   }
 
   @computed
@@ -54,18 +65,28 @@ class MarketStore extends BaseStore {
     return this._mySell;
   }
 
-  GetAverageCondition = flow(function* (this: MarketStore) {
+  GetMarketCondition = flow(function* (this: MarketStore) {
     this._init("GET_AVERAGE_CONDITION");
     try {
       const {
         data: res,
       }: {
-        data: ApiResult<{ "market.condition": string }>;
+        data: ApiResult<{
+          "market.condition": string;
+          "market.buy.user_apply_limit": string;
+          "market.condition_lower": string;
+          "market.condition_upper": string;
+          "market.fees": string;
+          "market.sale.step": string;
+          "market.sale.min": string;
+          "market.sale.user_apply_limit": string;
+          "market.sale.max": string;
+        }>;
       } = yield MarketService.GetAverageAPI();
 
       const data = res.data;
 
-      this._averageCondition = data["market.condition"];
+      this._marketInfo = data;
 
       this._success["GET_AVERAGE_CONDITION"] = true;
     } catch (e) {
@@ -112,6 +133,8 @@ class MarketStore extends BaseStore {
           this._dealingList.push(data);
         });
       } else {
+        this._dealingList = [];
+
         this._dealingList = content;
       }
 
@@ -143,6 +166,75 @@ class MarketStore extends BaseStore {
     }
   });
 
+  GetMySell = flow(function* (
+    this: MarketStore,
+    page: number,
+    status?: string,
+    duration?: string,
+    more?: boolean,
+  ) {
+    this._init("GET_MY_SELL");
+
+    try {
+      const {
+        data: res,
+      }: {
+        data: ApiResult<{ markets: Dealing[]; paging: Paging }>;
+      } = yield MarketService.GetMySellAPI(page, status, duration);
+
+      const { markets, paging } = res.data;
+
+      if (more) {
+        this._mySell = this._mySell.concat(markets);
+      } else {
+        this._mySell = markets;
+      }
+
+      this._paging = paging;
+
+      this._success["GET_MY_SELL"] = true;
+    } catch (e) {
+      this._failure["GET_MY_SELL"] = [true, e];
+    } finally {
+      this._pending["GET_MY_SELL"] = false;
+    }
+  });
+
+  PostPoint = flow(function* (this: MarketStore, amount: number) {
+    this._init("POST_POINT");
+
+    try {
+      const data = new FormData();
+
+      data.set("amount", amount.toString());
+
+      yield MarketService.PostPointAPI(data);
+      this._success["POST_POINT"] = true;
+    } catch (e) {
+      this._failure["POST_POINT"] = [true, e];
+    } finally {
+      this._pending["POST_POINT"] = false;
+    }
+  });
+
+  PostAccept = flow(function* (this: MarketStore, idx: number) {
+    this._init("POST_ACCEPT");
+
+    try {
+      yield MarketService.PostAcceptAPI(idx);
+
+      this._success["POST_ACCEPT"] = true;
+    } catch (e) {
+      this._failure["POST_ACCEPT"] = [true, e];
+    } finally {
+      this._pending["POST_ACCEPT"] = false;
+    }
+  });
+
+  // ======================================================================
+  // 판매
+  // ======================================================================
+
   PostSell = flow(function* (this: MarketStore, quantity: number, price: number) {
     this._init("POST_SELL");
     try {
@@ -150,7 +242,7 @@ class MarketStore extends BaseStore {
       form.set("quantity", quantity.toString());
       form.set("price", price.toString());
 
-      yield MarketService.PostSellAPI(form);
+      yield MarketService.PostSellAPI("DILLING", quantity, price);
 
       this._success["POST_SELL"] = true;
     } catch (e) {
@@ -160,26 +252,150 @@ class MarketStore extends BaseStore {
     }
   });
 
-  GetMySell = flow(function* (this: MarketStore, page: number) {
-    this._init("GET_MY_SELL");
+  GetBuyer = flow(function* (this: MarketStore, id: number, purId: number) {
+    this._init("GET_BUYER");
+
     try {
       const {
         data: res,
       }: {
-        data: ApiResult<Dealing[]>;
-      } = yield MarketService.GetMySellAPI(page);
+        data: ApiResult<{ user: User }>;
+      } = yield MarketService.GetBuyerAPI(id, purId);
 
-      const data = res.data;
+      const { user } = res.data;
 
-      this._mySell = data;
-      this._success["GET_MY_SELL"] = true;
+      this._success["GET_BUYER"] = true;
     } catch (e) {
-      this._failure["GET_MY_SELL"] = [true, e];
+      this._failure["GET_BUYER"] = [true, e];
     } finally {
-      this._pending["GET_MY_SELL"] = false;
+      this._pending["GET_BUYER"] = false;
     }
   });
 
+  PostPurchaseAccept = flow(function* (this: MarketStore, id: number, purId: number) {
+    this._init("POST_PURCHASE_ACCEPT");
+
+    try {
+      yield MarketService.PostPurchaseAcceptAPI(id, purId);
+
+      this._success["POST_PURCHASE_ACCEPT"] = true;
+    } catch (e) {
+      this._failure["POST_PURCHASE_ACCEPT"] = [true, e];
+    } finally {
+      this._pending["POST_PURCHASE_ACCEPT"] = false;
+    }
+  });
+
+  PostPurchaseDeny = flow(function* (this: MarketStore, id: number, purId: number, reason: string) {
+    this._init("POST_PURCHASE_DENY");
+
+    try {
+      yield MarketService.PostPurchaseDenyAPI(id, purId, reason);
+
+      this._success["POST_PURCHASE_DENY"] = true;
+    } catch (e) {
+      this._failure["POST_PURCHASE_DENY"] = [true, e];
+    } finally {
+      this._pending["POST_PURCHASE_DENY"] = false;
+    }
+  });
+
+  PostPurchaseDone = flow(function* (this: MarketStore, id: number, purId: number) {
+    this._init("POST_PURCHASE_DONE");
+
+    try {
+      yield MarketService.PostPurchaseDoneAPI(id, purId);
+
+      this._success["POST_PURCHASE_DONE"] = true;
+    } catch (e) {
+      this._failure["POST_PURCHASE_DONE"] = [true, e];
+    } finally {
+      this._pending["POST_PURCHASE_DONE"] = false;
+    }
+  });
+
+  PostBuyReport = flow(function* (this: MarketStore, id: number, purId: number, reason: string) {
+    this._init("POST_BUY_REPORT");
+
+    try {
+      yield MarketService.PostBuyReportAPI(id, purId, reason);
+
+      this._success["POST_BUY_REPORT"] = true;
+    } catch (e) {
+      this._failure["POST_BUY_REPORT"] = [true, e];
+    } finally {
+      this._pending["POST_BUY_REPORT"] = false;
+    }
+  });
+
+  DeleteMarket = flow(function* (this: MarketStore, idx: number) {
+    this._init("DELETE_MARKET");
+
+    try {
+      yield MarketService.DeleteMarketAPI(idx);
+
+      this._success["DELETE_MARKET"] = true;
+    } catch (e) {
+      this._failure["DELETE_MARKET"] = [true, e];
+    } finally {
+      this._pending["DELETE_MARKET"] = false;
+    }
+  });
+
+  // ======================================================================
+  // 구매
+  // ======================================================================
+
+  // 구매내역
+  GetPurchases = flow(function* (
+    this: MarketStore,
+    page: number,
+    order: string,
+    query?: string,
+    more?: boolean,
+  ) {
+    this._init("GET_PURCHASES");
+
+    try {
+      const {
+        data: res,
+      }: {
+        data: ApiResult<{ list: Dealing[]; paging: Paging }>;
+      } = yield MarketService.GetpurchasesAPI();
+
+      const { list, paging } = res.data;
+
+      if (more) {
+        this._dealingList = this._mySell.concat(list);
+      } else {
+        console.log(list);
+        this._dealingList = list;
+      }
+
+      this._paging = paging;
+
+      this._success["GET_PURCHASES"] = true;
+    } catch (e) {
+      this._failure["GET_PURCHASES"] = [true, e];
+    } finally {
+      this._pending["GET_PURCHASES"] = false;
+    }
+  });
+
+  // 구매 요청 등록
+  DeleteBuyCancle = flow(function* (this: MarketStore, id: number, purId: number) {
+    this._init("DELETE_BUY_CANCLE");
+    try {
+      yield MarketService.DeleteBuyCancleAPI(id, purId);
+      this._success["DELETE_BUY_CANCLE"] = true;
+    } catch (e) {
+      this._failure["DELETE_BUY_CANCLE"] = [true, e];
+    } finally {
+      this._pending["DELETE_BUY_CANCLE"] = false;
+    }
+  });
+
+  // 구매 요청 등록
   PostBuyApply = flow(function* (this: MarketStore, id: number) {
     this._init("POST_BUY_APPLY");
     try {
@@ -191,6 +407,40 @@ class MarketStore extends BaseStore {
       this._pending["POST_BUY_APPLY"] = false;
     }
   });
+
+  // 입금 완료
+  PostPurchaseDeposit = flow(function* (this: MarketStore, id: number, purId: number) {
+    this._init("POST_PURCHASE_DEPOSIT");
+
+    try {
+      yield MarketService.PostPurchaseDepositAPI(id, purId);
+
+      this._success["POST_PURCHASE_DEPOSIT"] = true;
+    } catch (e) {
+      this._failure["POST_PURCHASE_DEPOSIT"] = [true, e];
+    } finally {
+      this._pending["POST_PURCHASE_DEPOSIT"] = false;
+    }
+  });
+
+  // 판매자 신고
+  PostSelletReport = flow(function* (this: MarketStore, id: number, purId: number, reason: string) {
+    this._init("POST_SELLER_REPORT");
+
+    try {
+      yield MarketService.PostSelletReportAPI(id, purId, reason);
+
+      this._success["POST_SELLER_REPORT"] = true;
+    } catch (e) {
+      this._failure["POST_SELLER_REPORT"] = [true, e];
+    } finally {
+      this._pending["POST_SELLER_REPORT"] = false;
+    }
+  });
+
+  // ======================================================================
+  // 전송
+  // ======================================================================
 }
 
 export default MarketStore;

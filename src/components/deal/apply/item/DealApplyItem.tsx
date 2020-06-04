@@ -1,24 +1,52 @@
 /* eslint-disable jsx-a11y/alt-text */
-import React, { useState, useCallback, ChangeEvent } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import styled from "styled-components";
 
+import Keypad from "components/common/keypad";
+
 import { Account } from "stores/users/types";
+import { Dealing } from "stores/market/types";
 
 import OpenIcon from "assets/icons/open.png";
 import PlusIcon from "assets/icons/plus.png";
 import MinusIcon from "assets/icons/minus.png";
 import MinIcon from "assets/icons/min.png";
 import MaxIcon from "assets/icons/max.png";
+import Modal from "components/common/modal";
+import regex from "lib/regex";
 
 interface Props {
+  high?: string;
+  low?: string;
   account: Account;
+  product?: Dealing;
+  duplicate: (pw: string) => void;
+  check: boolean;
   postSell: (quantity: number, price: number) => void;
 }
 
-function DealApplyItem({ account, postSell }: Props) {
+function DealApplyItem({ account, postSell, high, low, product, duplicate, check }: Props) {
+  const [key, setKey] = useState<boolean>(false);
   const [open, setOpen] = useState<boolean>(true);
-  const [price, setPrice] = useState<string>("");
+  const [apply, setApply] = useState<boolean>(false);
+  const [price, setPrice] = useState<string>("100");
   const [quantity, setQuantity] = useState<string>("");
+
+  useEffect(() => {
+    if (product) {
+      setPrice(product.price.toString());
+      setQuantity(product.quantity.toString());
+    }
+
+    if (check) {
+      setKey(false);
+
+      const quan = Number(quantity);
+      const pri = Number(price);
+
+      postSell(quan, pri);
+    }
+  }, [product, check, quantity, price, postSell]);
 
   const handleOpen = useCallback(
     (e: any) => {
@@ -29,6 +57,18 @@ function DealApplyItem({ account, postSell }: Props) {
     [open],
   );
 
+  const handleKeyClose = () => {
+    setKey(false);
+  };
+
+  const handleApplyClose = () => {
+    setApply(false);
+  };
+
+  const duplicatePin = (pw: string) => {
+    duplicate(pw);
+  };
+
   const onChangePrice = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     e.preventDefault();
 
@@ -37,35 +77,101 @@ function DealApplyItem({ account, postSell }: Props) {
     setPrice(value);
   }, []);
 
-  const onChangeQuantity = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    e.preventDefault();
+  const onChangeQuantity = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      e.preventDefault();
 
-    const { value } = e.target;
+      const { value } = e.target;
 
-    setQuantity(value);
-  }, []);
+      if (Number(account.quantity) >= Number(value)) {
+        setQuantity(value);
+      } else {
+        alert("보유 수량보다 많습니다.");
+      }
+    },
+    [account.quantity],
+  );
 
-  const onPost = useCallback((e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
-    e.preventDefault();
-    // if (quantity && price) {
-    //   const quan = Number(quantity);
-    //   const pri = Number(price);
-    //   if (quan > 0 && pri > 0) {
-    //     if (account.dl >= Number(quantity)) {
-    //       postSell(Number(quantity), Number(price));
-    //     } else {
-    //       alert("보유수량 보다 많음.");
-    //     }
-    //   } else {
-    //     alert("0 은 앙대");
-    //   }
-    // } else {
-    //   alert("입력칸을 모두 채워주세요.");
-    // }
-  }, []);
+  const onPost = useCallback(
+    (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+      e.preventDefault();
+      if (quantity && price) {
+        setApply(true);
+      } else {
+        alert("판매수량을 입력해주세요.");
+      }
+    },
+    [price, quantity],
+  );
+
+  const onApply = () => {
+    setApply(false);
+    setKey(true);
+  };
+
+  const onAdd = useCallback(
+    (e: any) => {
+      e.preventDefault();
+
+      const { id } = e.target;
+
+      if (id === "all") {
+        const tmp = Number(account.quantity).toFixed(3);
+        setQuantity(tmp.toString());
+      } else if (id === "10000") {
+        if (Number(account.quantity) > 10000) {
+          setQuantity("10000");
+        } else {
+          alert("보유 수량보다 많습니다.");
+        }
+      } else if (id === "5000") {
+        if (Number(account.quantity) > 5000) {
+          setQuantity("5000");
+        } else {
+          alert("보유 수량보다 많습니다.");
+        }
+      } else if (id === "1000") {
+        if (Number(account.quantity) > 1000) {
+          setQuantity("1000");
+        } else {
+          alert("보유 수량보다 많습니다.");
+        }
+      } else {
+      }
+    },
+    [account.quantity],
+  );
+
+  const reset = () => {
+    setQuantity("");
+  };
 
   return (
     <Wrap>
+      {key && <Keypad onPrev={handleKeyClose} go={duplicatePin} />}
+      <Modal
+        open={apply}
+        type="two"
+        close={handleApplyClose}
+        title="등록 안내"
+        btnTitle="등록하기"
+        onClick={onApply}
+      >
+        <ul>
+          <li className="sb-box">
+            판매수량<span>{regex.moneyRegex(Number(quantity))} DL</span>
+          </li>
+          <li className="sb-box">
+            개당가격<span>{price} KRW</span>
+          </li>
+          <li className="sb-box">
+            판매가<span>{regex.moneyRegex(Number(quantity) * Number(price))} KRW</span>
+          </li>
+          <li className="sb-box">
+            전송 수수료<span>{regex.moneyRegex(Number(quantity) * Number(price) * 0.05)} CP</span>
+          </li>
+        </ul>
+      </Modal>
       <div className="title" onClick={handleOpen}>
         DL(딜링)
         <img src={OpenIcon} />
@@ -74,18 +180,32 @@ function DealApplyItem({ account, postSell }: Props) {
         <div className="info">
           <div className="my-coin">
             <em>보유수량</em>
-            <span> DLC</span>
+            <span>{regex.moneyRegex(Number(account.quantity))} DLC</span>
           </div>
           <div className="apply-coin">
             <div>
               <em>판매수량</em>
-              <input type="number" onChange={onChangeQuantity} value={quantity} />
+              <input
+                type="number"
+                pattern="[0-9]*"
+                inputMode="decimal"
+                onChange={onChangeQuantity}
+                value={quantity}
+              />
             </div>
             <span className="btn-wrap">
-              <button>All</button>
-              <button>+1만개</button>
-              <button>+5천개</button>
-              <button>+1천개</button>
+              <button id="all" onClick={onAdd}>
+                All
+              </button>
+              <button id="10000" onClick={onAdd}>
+                +1만개
+              </button>
+              <button id="5000" onClick={onAdd}>
+                +5천개
+              </button>
+              <button id="1000" onClick={onAdd}>
+                +1천개
+              </button>
             </span>
           </div>
           <div className="apply-coin">
@@ -94,9 +214,12 @@ function DealApplyItem({ account, postSell }: Props) {
               <div className="input-wrap">
                 <input
                   type="number"
+                  pattern="[0-9]*"
+                  inputMode="decimal"
                   style={{ paddingRight: "70px" }}
                   onChange={onChangePrice}
                   value={price}
+                  readOnly
                 />
                 <button>
                   <img src={MinusIcon} />
@@ -107,9 +230,9 @@ function DealApplyItem({ account, postSell }: Props) {
               </div>
             </div>
             <span style={{ marginBottom: "13px" }}>
-              하한가 : 90KRW
+              하한가 : {low}KRW
               <img src={MaxIcon} />
-              &emsp; 상한가 : 110KRW
+              &emsp; 상한가 : {high}KRW
               <img src={MinIcon} />
             </span>
           </div>
@@ -117,7 +240,8 @@ function DealApplyItem({ account, postSell }: Props) {
             <div>
               <em>판매가</em>
               <span className="result">
-                2,000<em>KRW</em>
+                {regex.moneyRegex(Number(price) * Number(quantity))}
+                <em>KRW</em>
               </span>
             </div>
             <span style={{ marginTop: "0px" }}>
@@ -128,7 +252,7 @@ function DealApplyItem({ account, postSell }: Props) {
           </div>
 
           <div className="btn-box">
-            <button>초기화</button>
+            <button onClick={reset}>초기화</button>
             <button onClick={onPost}>다음</button>
           </div>
           <div className="notice">

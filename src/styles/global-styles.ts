@@ -1,6 +1,8 @@
 import { createGlobalStyle } from "styled-components";
 import reset from "styled-reset";
 
+import MiniOpenIcon from "assets/icons/mini-open.png";
+
 const GlobalStyle = createGlobalStyle`
 ${reset}
 * {
@@ -73,22 +75,21 @@ height: auto;
 vertical-align: middle;
 }
 
-input[type="text"],input[type="number"] {
+input[type="text"] {
 width: 100%;
 height: 40px;
-/* background: #FFFFFF; */
+
 border: 1px solid #DDDDDD;
 border-radius: 2px;
 
-text-align: right;
+/* text-align: right; */
 
 font-size: 16px;
 line-height: 22px;
-/* identical to box height */
 
 display: flex;
 align-items: center;
-text-align: right;
+
 
 color: #444444;
 
@@ -97,6 +98,38 @@ padding: 0 34px 0px 10px;
 -webkit-appearance: none;
 box-shadow: none !important;
 }
+
+input[type="number"]{
+width: 100%;
+height: 40px;
+
+border: 1px solid #DDDDDD;
+border-radius: 2px;
+
+text-align: right;
+
+font-size: 16px;
+line-height: 22px;
+
+display: flex;
+align-items: center;
+
+
+color: #444444;
+
+
+padding: 0 34px 0px 10px;
+-webkit-appearance: none;
+box-shadow: none !important;
+text-align: right;
+}
+
+input:read-only {
+    
+    background: #EEEEEE
+        
+}
+
 
 select {
 /* width: auto; */
@@ -112,6 +145,19 @@ outline: none;
 /* overflow: hidden; */
 border: 1px solid #DDDDDD;
 background: #fff;
+
+
+
+border-radius: 0px;
+
+background: url(${MiniOpenIcon}) no-repeat 98% center;
+background-size: 12px;
+background-repeat: no-repeat;
+
+padding: 0 10px;
+
+appearance: none;
+
 }
 
 .red-font {
@@ -119,7 +165,7 @@ background: #fff;
 }
 
 .skyblue-font {
-    color: #FF9900;
+    color: #00AAFF;
 }
 
 
@@ -129,6 +175,8 @@ background: #fff;
 
 .display-none {
     display: none;
+
+
 }
 
 .bg-primary {
@@ -157,6 +205,8 @@ background: #fff;
 
             }
 }
+
+
 
 
 `;

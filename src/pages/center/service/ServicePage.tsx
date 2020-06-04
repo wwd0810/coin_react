@@ -5,7 +5,7 @@ import ServiceContaniner from "containers/center/ServiceContainer";
 
 function ServicePage() {
   return (
-    <StackTemplate title="서비스 문의">
+    <StackTemplate title="서비스 문의" inquiry={true}>
       <ServiceContaniner />
     </StackTemplate>
   );

@@ -4,26 +4,44 @@ import styled from "styled-components";
 import classnames from "classnames";
 
 import DLIcon from "assets/icons/dl-coin.png";
+import { PointType, Account } from "stores/users/types";
+import regex from "lib/regex";
+import moment from "moment";
 
-interface Props {
-  type: "deposit" | "send" | "transform" | "buy" | "sell";
+interface Props extends PointType {
+  account?: Account;
 }
 
-function SendItem({ type }: Props) {
-  const typeCheck = () => {
-    if (type === "deposit") return "입금";
-    if (type === "send") return "전송";
-    if (type === "transform") return "딜링전환";
-    if (type === "buy") return "구매";
-    if (type === "sell") return "판매";
+function SendItem({ title, amount, created_at, to_user, from_user, to, from, account }: Props) {
+  const typeBottomCheck = () => {
+    if (title === "입금") return `${from_user?.name} > ${to_user?.name}`;
+    if (title === "전송") return `${from_user?.name} > ${to_user?.name}`;
+    if (title === "구매") return "상품번호 : P000258344NK";
+    if (title === "판매") return "상품번호 : P000258344NK";
   };
 
-  const typeBottomCheck = () => {
-    if (type === "deposit") return "HOJOGroup > NeedsClear";
-    if (type === "send") return "HOJOGroup > NeedsClear";
-    if (type === "transform") return "1,000 CP > 100 DL 전환율 1%";
-    if (type === "buy") return "상품번호 : P000258344NK";
-    if (type === "sell") return "상품번호 : P000258344NK";
+  const titleCheck = () => {
+    if (account) {
+      const id = account.id;
+
+      if (title.includes("구매")) {
+        if (to.id === id) return "구매";
+
+        if (from.id === id) return "판매";
+      }
+
+      if (title.includes("전송")) {
+        if (to.id === id) return "입금";
+
+        if (from.id === id) return "전송";
+      }
+
+      if (title.includes("환불")) {
+        return "환불";
+      }
+
+      return "알수 없음";
+    }
   };
 
   return (
@@ -32,15 +50,16 @@ function SendItem({ type }: Props) {
         <img src={DLIcon} />
         <div className="info">
           <span className="type-info">
-            {typeCheck()} <span>2020.02.02 02:02</span>
+            {titleCheck()} <span>{moment(created_at).format("YYYY-MM-DD HH:mm")}</span>
           </span>
           <span
             className={classnames("", {
-              "cost-blue": type === "deposit" || type === "transform" || type === "buy",
-              "cost-red": type === "send" || type === "sell",
+              "cost-blue":
+                titleCheck() === "입금" || titleCheck() === "구매" || titleCheck() === "환불",
+              "cost-red": titleCheck() === "전송" || titleCheck() === "판매",
             })}
           >
-            123.123 DL
+            {regex.moneyRegex(Number(amount))} DL
           </span>
         </div>
       </div>

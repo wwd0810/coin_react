@@ -1,52 +1,54 @@
-import React, { useState, useCallback } from "react";
+/* eslint-disable jsx-a11y/alt-text */
+import React from "react";
 import styled from "styled-components";
 import NIcon from "assets/icons/n.png";
 import QIcon from "assets/icons/q.png";
 import AIcon from "assets/icons/a.png";
+import { InquiryType } from "stores/notice/types";
 
-function ServiceItem() {
-  const [open, setOpen] = useState<boolean>(false);
+interface Props extends InquiryType {
+  id: number;
+  selected?: number;
+  onClick: (id: number) => void;
+}
 
-  const onOpen = useCallback(
-    (e) => {
-      e.preventDefault();
-      setOpen(!open);
-    },
-    [open]
-  );
+function ServiceItem({ id, selected, onClick, contents, answer, title }: Props) {
+  const click = () => {
+    onClick(id);
+  };
   return (
     <Wrap>
-      <div className="service-title" onClick={onOpen}>
+      <div className="service-title" onClick={click}>
         <div className="title">
-          <span>서비스 이용 문의</span>
+          <span>{title}</span>
           <img src={NIcon} />
           <p>2020.05.22</p>
         </div>
       </div>
-      {open && (
+      {id === selected && (
         <div className="service-contentBox">
           <div>
             <div className="service-contentTitle">
               <img src={QIcon} />
-              <span>서비스 이용혜택 변경</span>
             </div>
             <div className="service-content">
-              <p>서비스 이용혜택 변경</p>
-              <p>서비스 이용혜택 변경</p>
-              <p>서비스 이용혜택 변경</p>
+              {contents.split("\n").map((ele, idx) => (
+                <p key={idx}>{ele}</p>
+              ))}
             </div>
           </div>
           <div className="answer-contentBox">
             <div className="answer-contentTitle">
               <img src={AIcon} />
-              <span>서비스 이용 혜택 변경</span>
             </div>
-            <div className="answer-content">
-              <p>서비스 이용 혜택 변경</p>
-              <p>서비스 이용 혜택 변경</p>
-              <p>서비스 이용 혜택 변경</p>
-              <p>서비스 이용 혜택 변경</p>
-            </div>
+
+            {answer && (
+              <div className="answer-content">
+                {answer.split("\n").map((ele, idx) => (
+                  <p key={idx}>{ele}</p>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}

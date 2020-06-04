@@ -1,5 +1,5 @@
 /* eslint-disable jsx-a11y/alt-text */
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import styled from "styled-components";
 import classnames from "classnames";
 
@@ -7,12 +7,13 @@ import PrevIcon from "assets/icons/prev.png";
 
 interface Props {
   onPrev?: () => void;
+  go?: (pw: string) => void;
 }
 
-function Keypad({ onPrev }: Props) {
+function Keypad({ onPrev, go }: Props) {
   const pw = [1, 2, 3, 4, 5, 6];
   const keyname = [1, 2, 3, 4, 5, 6, 7, 8, 9];
-  const [str, setStr] = useState<String>("");
+  const [str, setStr] = useState<string>("");
 
   const onChange = useCallback(
     (e: any) => {
@@ -26,11 +27,20 @@ function Keypad({ onPrev }: Props) {
       } else {
         if (str.length < 6) {
           setStr(str + id);
+        } else {
         }
       }
     },
     [str],
   );
+
+  useEffect(() => {
+    if (str.length >= 6) {
+      if (go) {
+        go(str);
+      }
+    }
+  }, [go, str]);
 
   return (
     <Wrap>

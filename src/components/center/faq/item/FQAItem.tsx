@@ -1,43 +1,44 @@
 /* eslint-disable jsx-a11y/alt-text */
-import React, { useState, useCallback } from "react";
+import React from "react";
 import styled from "styled-components";
 
 import AIcon from "assets/icons/a.png";
 import QIcon from "assets/icons/q.png";
+import { FAQType } from "stores/notice/types";
 
-function FQAItem() {
-  const [open, setOpen] = useState<boolean>(false);
+interface Props extends FAQType {
+  id: number;
+  selected: number;
+  onClick: (id: number) => void;
+}
 
-  const onOpen = useCallback(
-    (e) => {
-      e.preventDefault();
-      setOpen(!open);
-    },
-    [open],
-  );
+function FQAItem({ onClick, id, selected, question, answer }: Props) {
+  const onOpen = () => {
+    onClick(id);
+  };
 
   return (
     <Wrap>
       <div className="fqa-title" onClick={onOpen}>
         <div className="fqa">
           <img src={QIcon} />
-          <span>결제후 추가할인이 무언잇가요?</span>
+          <span>{question}</span>
         </div>
       </div>
-      {open && (
+      {id === selected && (
         <div className="fqa-answer">
           <div className="fqa-contentBox">
             <div className="q-icon">
               <img src={AIcon} />
             </div>
             <div className="content">
-              <div className="fqa-contentTitle">
+              {/* <div className="fqa-contentTitle">
                 <h2>이용혜택 변경</h2>
-              </div>
+              </div> */}
               <div className="fqa-content">
-                <p>이용혜택 변경</p>
-                <p>이용혜택 변경</p>
-                <p>이용혜택 변경</p>
+                {answer.split("\n").map((data, idx) => (
+                  <p key={idx}>{data}</p>
+                ))}
               </div>
             </div>
           </div>

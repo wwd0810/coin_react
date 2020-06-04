@@ -58,8 +58,8 @@ function Carousle() {
 }
 
 const Wrap = styled.div`
-
-width: 100%;
+overflow-x:hidden;
+max-width: 100%;
 height: 160px;
 
 background: #AAAAAA;
@@ -71,12 +71,17 @@ border-radius: 6px;
     outline: none;
     height: 160px;
 
-    border-radius: 6px;
-    & > img { 
+    border-radius: 6px ;
+    & > img {
+
       
-      /* height: 160px; */
-      
-      border-radius: 6px;
+      height:auto; 
+
+      object-fit: cover;
+
+      max-width:100%;
+      max-height:100%;
+      border-radius: 6px ;
     }
 
     & > .count {
@@ -107,6 +112,7 @@ border-radius: 6px;
 }
 
 }
+
 
   
 ${({ theme }) => theme.media.mobile`

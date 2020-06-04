@@ -1,38 +1,39 @@
 import React, { useState, useCallback } from "react";
 import styled from "styled-components";
+import { NoticeType } from "stores/notice/types";
 
-function NoticeItem() {
-  const [open, setOpen] = useState<boolean>(false);
+interface Props {
+  id: number;
+  selected?: number;
+  data: NoticeType;
+  onClick: (id: number) => void;
+}
 
+function NoticeItem({ id, selected, data, onClick }: Props) {
   const onOpen = useCallback(
     (e) => {
       e.preventDefault();
 
-      setOpen(!open);
+      onClick(id);
     },
-    [open]
+    [id, onClick],
   );
 
   return (
     <Wrap>
       <div className="notice-title" onClick={onOpen}>
         <div className="title">
-          <span>공지사항</span>
-          <p>2020.05.22</p>
+          <span>{data.title}</span>
+          <p>{data.created_at.toString().slice(0, 10)}</p>
         </div>
       </div>
 
-      {open && (
+      {id === selected && (
         <div>
           <div className="notice-contentBox">
-            <div className="notice-contentTitle">
-              <h2>이용혜택 변경</h2>
-            </div>
-            <div className="notice-content">
-              <p>이용혜택 변경</p>
-              <p>이용혜택 변경</p>
-              <p>이용혜택 변경</p>
-            </div>
+            {data.contents.split("\n").map((data, idx) => (
+              <p key={idx}>{data}</p>
+            ))}
           </div>
         </div>
       )}
@@ -79,6 +80,13 @@ width: 100%;
   background-color: #F7F7F7;
   padding: 12px 16px 24px 16px;
   
+  & > p {
+    font-size: 12px;
+  line-height: 16px;
+
+  color: #444444;
+
+  }
 }
 
 .notice-content{

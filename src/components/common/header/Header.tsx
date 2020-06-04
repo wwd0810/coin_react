@@ -12,9 +12,10 @@ import NoticeIcon from "assets/icons/notice.png";
 interface Props {
   main?: boolean;
   title?: string;
+  my?: boolean;
 }
 
-function Header({ main, title }: Props) {
+function Header({ main, title, my }: Props) {
   // const [open, setOpen] = useState<boolean>(false);
 
   // const onOpen = useCallback((e: any) => {
@@ -45,7 +46,9 @@ function Header({ main, title }: Props) {
         <div
           className="topMenu"
           id={title}
-          style={{ borderBottom: title !== "마이페이지" ? "1px solid #E5E5E5" : "none" }}
+          style={{
+            borderBottom: title !== "마이페이지" ? "1px solid #E5E5E5" : "none",
+          }}
         >
           <span className="logo">{title !== "마이페이지" && title}</span>
         </div>

@@ -7,9 +7,10 @@ import PrevIcon from "assets/icons/prev.png";
 interface Props {
   title: String;
   onPrev?: (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => void;
+  inquiry?: boolean;
 }
 
-function StackHeader({ title, onPrev }: Props) {
+function StackHeader({ title, onPrev, inquiry }: Props) {
   return (
     <Wrap>
       <span>
@@ -54,6 +55,15 @@ padding : 14px 16px;
 }
 
 & > span {
+
+  & > button {
+    font-size: 14px;
+    line-height: 19px;
+    text-decoration-line: underline;
+
+    color: #2233AA;
+  }
+
 
     & > button > img {
         width: 24px;

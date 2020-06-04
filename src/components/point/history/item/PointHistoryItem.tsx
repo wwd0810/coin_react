@@ -3,25 +3,30 @@ import React from "react";
 import styled from "styled-components";
 
 import CPIcon from "assets/icons/cp-coin.png";
+import { PointType } from "stores/users/types";
+import regex from "lib/regex";
+import moment from "moment";
 
-interface Props {
-  type: "charge_credit" | "charge_account" | "tax";
+interface Props extends PointType {
+  // type?: "charge_credit" | "charge_account" | "tax";
 }
 
-function PointHistoryItem({ type }: Props) {
+function PointHistoryItem({ description, amount, created_at, title }: Props) {
   return (
     <Wrap>
       <div>
         <img src={CPIcon} />
         <div>
           <div>
-            <p>충전</p>
-            <span>2020.02.02 02:02</span>
+            <p>{title}</p>
+            <span>{moment(created_at).format("YYYY-MM-DD HH:mm:ss")}</span>
           </div>
-          <p>3,000 CP</p>
+          <p style={{ color: Number(amount) < 0 ? "#EE3300" : "#00AAFF" }}>
+            {regex.moneyRegex(Number(amount))} CP
+          </p>
         </div>
       </div>
-      <span>신용카드 일시불 결제</span>
+      <span>{description}</span>
     </Wrap>
   );
 }

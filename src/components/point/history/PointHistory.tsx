@@ -1,13 +1,36 @@
 /* eslint-disable jsx-a11y/alt-text */
-import React from "react";
+import React, { useState, useCallback } from "react";
 import styled from "styled-components";
 import { Link } from "react-router-dom";
 
 import PointHistoryItem from "./item";
 
 import CPIcon from "assets/icons/cp-coin.png";
+import { PointType } from "stores/users/types";
+import { Paging } from "stores/market/types";
 
-function PointHistory() {
+interface Props {
+  paging?: Paging;
+  cpList: PointType[];
+  more: (page: number) => void;
+}
+
+function PointHistory({ cpList, more, paging }: Props) {
+  const [page, setPage] = useState<number>(0);
+
+  // let page: number = 0;
+
+  const onClickMore = useCallback(
+    (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+      e.preventDefault();
+
+      setPage(page + 1);
+
+      more(page + 1);
+    },
+    [more, page],
+  );
+
   return (
     <Wrap>
       <Link to="/point/charge">
@@ -30,9 +53,18 @@ function PointHistory() {
           </select>
         </span>
         <div className="items">
-          <PointHistoryItem type="charge_account" />
+          {cpList.map((data, idx) => (
+            <PointHistoryItem {...data} key={idx} />
+          ))}
+          {paging && page < paging.count / paging.limit - 1 && (
+            <button className="more-btn" onClick={onClickMore}>
+              더보기
+            </button>
+          )}
+
+          {/* <PointHistoryItem type="charge_account" />
           <PointHistoryItem type="charge_credit" />
-          <PointHistoryItem type="tax" />
+          <PointHistoryItem type="tax" /> */}
         </div>
       </div>
     </Wrap>
@@ -42,6 +74,21 @@ function PointHistory() {
 const Wrap = styled.div`
 
 width: 100%;
+
+
+.more-btn {
+  width: 100%;
+  height: 32px;
+
+  font-size: 14px;
+  line-height: 19px;
+  color: #444444;
+
+  background: #FFFFFF;
+  border: 1px solid #DDDDDD;
+
+  margin-bottom: 20px;
+}
 
 & > .list {
 

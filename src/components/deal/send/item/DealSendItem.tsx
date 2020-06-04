@@ -1,14 +1,51 @@
 /* eslint-disable jsx-a11y/alt-text */
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import styled from "styled-components";
 
-import Modal from "components/common/modal";
+import SendModal from "../modal";
+import Keypad from "components/common/keypad";
 
 import OpenIcon from "assets/icons/open.png";
+import { Account } from "stores/users/types";
+import regex from "lib/regex";
 
-function DealSendItem() {
+interface Props {
+  account: Account;
+  addr: string;
+  post: (price: string) => void;
+  duplicate: (pw: string) => void;
+  check: boolean;
+}
+
+function DealSendItem({ account, post, addr, check, duplicate }: Props) {
+  const [key, setKey] = useState<boolean>(false);
   const [open, setOpen] = useState<boolean>(false);
   const [send, setSend] = useState<boolean>(false);
+
+  const [price, setPrice] = useState<string>("");
+
+  useEffect(() => {
+    if (check) {
+      setKey(false);
+      post(price.toString());
+    }
+  }, [check, price, post]);
+
+  const onChangePrice = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      e.preventDefault();
+
+      const { value } = e.target;
+
+      if (account.quantity >= Number(value)) {
+        setPrice(value);
+      } else {
+        alert("보유수량보다 많습니다.");
+        setPrice(account.quantity.toString());
+      }
+    },
+    [account.quantity],
+  );
 
   const handleOpen = useCallback(
     (e: any) => {
@@ -20,50 +57,61 @@ function DealSendItem() {
   );
 
   const handSendOpen = () => {
-    setSend(true);
+    if (!addr) {
+      alert("받는 사람을 입력해주세요.");
+    } else if (!price) {
+      alert("전송 수량을 입력해주세요.");
+    } else {
+      setSend(true);
+    }
   };
 
   const handleSendClose = () => {
     setSend(false);
   };
 
+  const handleKeyClose = () => {
+    setKey(false);
+  };
+
+  const duplicatePin = (pw: string) => {
+    duplicate(pw);
+  };
+
+  const postSend = () => {
+    setSend(false);
+    setKey(true);
+
+    // post(price.toString());
+  };
+
   return (
     <Wrap>
-      <Modal
-        open={send}
-        close={handleSendClose}
-        type="two"
-        title="전송 안내"
-        // subChildren={"취소하시겠습니까?"}
-      >
-        <div>
-          전송 주소
-          <br />
-          전송 수량
-          <br />
-          전송 수수료
-        </div>
-      </Modal>
+      <SendModal open={send} close={handleSendClose} addr={addr} quan={price} onClick={postSend} />
       <div className="title" onClick={handleOpen}>
         DL(딜링)
         <img src={OpenIcon} />
       </div>
+      {key && <Keypad onPrev={handleKeyClose} go={duplicatePin} />}
       {open && (
         <div className="info">
           <div className="my-coin">
             <em>보유수량</em>
-            <span>520 DLC</span>
+            <span>{regex.moneyRegex(Number(account.quantity))} DLC</span>
           </div>
           <div className="send-coin">
             <div>
               <em>전송수량</em>
-              <input type="number" />
+              <input
+                type="number"
+                pattern="[0-9]*"
+                inputMode="decimal"
+                value={price}
+                onChange={onChangePrice}
+              />
             </div>
-            <span>
-              전송한도 : 5,000 DL / 1일
-              <br />
-              CP가 모자랍니다. CP를 충전해주세요.
-            </span>
+            <span>전송한도 : 5,000 DL / 1일</span>
+            {Number(price) > account.quantity && <span>CP가 모자랍니다. CP를 충전해주세요.</span>}
           </div>
           <div className="btn-box">
             <button>초기화</button>
@@ -180,7 +228,9 @@ width: 100%;
 
       color: #888888;
       margin-top: 6px;
-      margin-bottom: 24px;
+      :last-child {
+        margin-bottom: 24px;
+      }
     }
   }
 

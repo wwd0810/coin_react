@@ -2,6 +2,8 @@
 import React, { useState } from "react";
 import styled from "styled-components";
 import { Link } from "react-router-dom";
+import QRCode from "qrcode.react";
+import CopyToClipboard from "react-copy-to-clipboard";
 
 import Modal from "components/common/modal";
 
@@ -10,6 +12,8 @@ import { Account } from "stores/users/types";
 import DLIcon from "assets/icons/dl-coin.png";
 import ImportIcon from "assets/icons/import.png";
 import ExportIcon from "assets/icons/export.png";
+import CopyIcon from "assets/icons/copy.png";
+import regex from "lib/regex";
 
 interface Props {
   account: Account;
@@ -26,6 +30,14 @@ function CoinItem({ account }: Props) {
     setSendOpen(false);
   };
 
+  const copy = () => {
+    alert("클립보드에 복사되었습니다.");
+  };
+
+  const share = () => {
+    window.ReactNativeWebView?.postMessage(`addrShare|${account.id}`);
+  };
+
   return (
     <Wrap>
       <Modal
@@ -33,9 +45,18 @@ function CoinItem({ account }: Props) {
         close={handleSednClose}
         type="two"
         title="딜링(DL) 주소보내기"
-        subChildren={"000000000000000"}
+        btnTitle="QR공유"
+        onClick={share}
+        subChildren={
+          <div>
+            <img src={CopyIcon} />
+            {account.id}
+          </div>
+        }
       >
-        <div>QR코드 들어가는 부분</div>
+        <CopyToClipboard text={account.id} onCopy={copy}>
+          <QRCode value={account.id} size={96} />
+        </CopyToClipboard>
       </Modal>
       <span className="coin-info">
         <img src={DLIcon} />
@@ -46,7 +67,7 @@ function CoinItem({ account }: Props) {
       </span>
       <div className="deal-box">
         <span className="coin-price">
-          {/* {account && account.dl} */}
+          {account && regex.moneyRegex(Number(account.quantity))}
           <em> DL</em>
         </span>
         <div className="deal-btns">
@@ -56,7 +77,7 @@ function CoinItem({ account }: Props) {
           </button>
           <Link to="/deal/send">
             <img src={ExportIcon} />
-            <em>출금하기</em>
+            <em>딜링보내기</em>
           </Link>
         </div>
       </div>

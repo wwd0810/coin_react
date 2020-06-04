@@ -1,11 +1,28 @@
-import React from "react";
+import React, { useState, useCallback } from "react";
 import styled from "styled-components";
 import NoticeItem from "./item/NoticeItem";
+import { NoticeType } from "stores/notice/types";
 
-function Notice() {
+interface Props {
+  notices: NoticeType[];
+}
+
+function Notice({ notices }: Props) {
+  const [selected, setSelected] = useState<number>();
+
+  const onSelect = (id: number) => {
+    if (selected === id) {
+      setSelected(undefined);
+    } else {
+      setSelected(id);
+    }
+  };
+
   return (
     <Wrap>
-      <NoticeItem />
+      {notices.map((data, idx) => (
+        <NoticeItem id={idx} selected={selected} data={data} key={idx} onClick={onSelect} />
+      ))}
     </Wrap>
   );
 }

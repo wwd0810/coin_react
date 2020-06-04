@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import styled from "styled-components";
 import { Link } from "react-router-dom";
 
@@ -6,34 +6,76 @@ import Carousle from "components/common/carousle";
 import CoinItem from "./item";
 import { Account } from "stores/users/types";
 
+import regex from "lib/regex";
+
 interface Props {
-  // account: Account[];
+  modalType: string;
+  openModal: boolean;
+  account?: Account[];
+  point?: number;
+  // chargePoint: (amount: number) => void;
 }
 
-function Home({}: Props) {
+function Home({ account, point }: Props) {
+  // useEffect(() => {
+  //   window.receivePayResponse = (res: any) => {
+  //     if (res) {
+  //       const { payData } = JSON.parse(res);
+
+  //       if (payData) {
+  //         const amount = Number(payData.amount);
+  //         chargePoint(amount);
+  //       } else {
+  //         alert("결제 실패");
+  //       }
+  //     } else {
+  //       alert("결제 실패");
+  //     }
+  //   };
+  // }, [chargePoint]);
+
   return (
     <Wrap>
       <Carousle />
+
       <Link to="/point/charge" className="my-point">
         <span>
-          <span className="point-box">내 포인트</span>
-          <em> CP</em>
+          {account && <span className="point-box">내 포인트</span>}
+          {account ? (
+            <em>
+              {regex.moneyRegex(
+                // Number(account?.filter((data) => data.type === "COIN_POINT")[0].quantity),
+                Number(point),
+              )}
+              CP
+            </em>
+          ) : (
+            <em>로그인이 필요합니다.</em>
+          )}
         </span>
         <span className="charging">충전하기 ></span>
       </Link>
 
       <div className="item-list">
-        {/* <CoinItem account={account} /> */}
+        {account
+          ?.filter((data) => data.type !== "COIN_POINT")
+          .map((data, idx) => (
+            <CoinItem account={data} key={idx} />
+          ))}
 
-        <div className="add-coin">+</div>
+        {account && <div className="add-coin">+</div>}
       </div>
     </Wrap>
   );
 }
 
 const Wrap = styled.div`
-
 width: 100%;
+
+/* position: absolute;
+left: 0px;
+right: 1px; */
+
 
 & > .my-point {
     width: 100%;

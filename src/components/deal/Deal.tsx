@@ -8,15 +8,18 @@ import SearchIcon from "assets/icons/search.png";
 import DealItem from "./item";
 
 import { Dealing, Paging } from "stores/market/types";
+import BuyModal from "./modal";
 
 interface Props {
   deal: Dealing[];
-  info: string;
+  info?: string;
   paging: Paging;
   getList: (page: number, order: string, query?: string, more?: boolean) => void;
+  postLike: (idx: number) => void;
+  buy: (idx: number) => void;
 }
 
-function Deal({ deal, info, paging, getList }: Props) {
+function Deal({ info, deal, paging, getList, postLike, buy }: Props) {
   const searchRef = useRef<HTMLInputElement>(null);
 
   const [state, setState] = useState({
@@ -25,6 +28,26 @@ function Deal({ deal, info, paging, getList }: Props) {
     prePage: 0,
     first: true,
   });
+
+  const [option, setOption] = useState<number>(0);
+  const [bid, setBid] = useState<number>();
+
+  const onChageOption = useCallback(
+    (e: React.ChangeEvent<HTMLSelectElement>) => {
+      e.preventDefault();
+
+      const { value } = e.target;
+
+      if (value === "0") {
+        setState({ ...state, page: 0, prePage: 0, sort: "RECENT|DESC", first: false });
+      } else {
+        setState({ ...state, page: 0, prePage: 0, sort: "LIKE|DESC", first: false });
+      }
+
+      setOption(Number(value));
+    },
+    [state],
+  );
 
   // ====================useCallbacks====================
   const getPageList = useCallback(
@@ -35,32 +58,30 @@ function Deal({ deal, info, paging, getList }: Props) {
     [state],
   );
 
-  const sortByRecent = useCallback(
-    (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
-      e.preventDefault();
-      if (state.sort === "RECENT|DESC")
-        setState({ ...state, page: 0, prePage: 0, sort: "RECENT|ASC", first: false });
-      else setState({ ...state, page: 0, prePage: 0, sort: "RECENT|DESC", first: false });
-    },
-    [state],
-  );
-
-  const sortByPrice = useCallback(
-    (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
-      e.preventDefault();
-      if (state.sort === "PRICE|DESC")
-        setState({ ...state, page: 0, prePage: 0, sort: "PRICE|ASC", first: false });
-      else setState({ ...state, page: 0, prePage: 0, sort: "PRICE|DESC", first: false });
-    },
-    [state],
-  );
-
   // ====================functions====================
   const enterPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
       // getList(state.page, state.sort, state.search, true);
       getList(state.page, state.sort, searchRef.current?.value);
     }
+  };
+
+  const toggleLike = (idx: number) => {
+    postLike(idx);
+  };
+
+  const changeBid = (id: number) => {
+    setBid(id);
+  };
+
+  const postBuy = () => {
+    if (bid) {
+      buy(bid);
+    }
+  };
+
+  const handleClose = () => {
+    setBid(undefined);
   };
 
   // ====================useEffects====================
@@ -76,6 +97,7 @@ function Deal({ deal, info, paging, getList }: Props) {
 
   return (
     <Wrap>
+      <BuyModal open={bid !== undefined} close={handleClose} onClick={postBuy} />
       <Link to="/deal/apply" className="coin-avg">
         <div className="avg-info">
           <img src={DLBigIcon} />
@@ -88,21 +110,31 @@ function Deal({ deal, info, paging, getList }: Props) {
       </Link>
       <div className="content">
         <div className="search-box">
-          <input type="text" />
+          <input
+            type="text"
+            ref={searchRef}
+            onKeyPress={enterPress}
+            placeholder="아이디 & 전화번호 검색"
+          />
           <img src={SearchIcon} />
         </div>
         <div className="result-box">
           <span>전체결과</span>
-          <select style={{ border: "none" }}>
-            <option>전체</option>
-            <option>관심상품</option>
+          <select style={{ border: "none" }} value={option} onChange={onChageOption}>
+            <option value={0}>전체</option>
+            <option value={1}>관심상품</option>
           </select>
         </div>
 
         <div className="item-list">
           {deal.map((data, idx) => (
-            <DealItem deal={data} key={idx} />
+            <DealItem {...data} key={idx} toggleLike={toggleLike} onClick={changeBid} />
           ))}
+          {paging && state.page < paging.count / paging.limit - 1 && (
+            <button className="more-btn" onClick={getPageList}>
+              더보기
+            </button>
+          )}
         </div>
       </div>
     </Wrap>
@@ -112,6 +144,18 @@ function Deal({ deal, info, paging, getList }: Props) {
 const Wrap = styled.div`
 
 width: 100%;
+
+.more-btn {
+  width: 100%;
+  height: 32px;
+
+  font-size: 14px;
+  line-height: 19px;
+  color: #444444;
+
+  background: #FFFFFF;
+  border: 1px solid #DDDDDD;
+}
 
 & > .coin-avg {
     height: 80px;    
@@ -181,7 +225,11 @@ width: 100%;
 
 & > .content {
 
-  margin-bottom: 52px;
+  
+  & > .item-list {
+    margin-bottom: 72px;
+  }
+
         
     & > .result-box {
         width: 100%;
@@ -204,6 +252,7 @@ width: 100%;
 
     }
 }
+
 
   
 ${({ theme }) => theme.media.mobile`

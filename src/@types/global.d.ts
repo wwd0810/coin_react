@@ -20,6 +20,7 @@ declare global {
 
   // ==================== window ====================
   interface Window {
+    IMP: any;
     Fcm?: {
       postMessage: (str: "getToken") => void;
     };
@@ -27,5 +28,6 @@ declare global {
       postMessage: (str: string) => void;
     };
     receiveToken: (str: string) => void;
+    receivePayResponse: (res: any) => void;
   }
 }

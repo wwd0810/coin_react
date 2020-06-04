@@ -56,7 +56,7 @@ Object.keys(sizes).reduce((acc: Media, label: string) => {
 
 const colors = {
   primary_color: "#0000AA",
-  secondary_color: "#FF9900",
+  secondary_color: "#00AAFF",
   grey_color: "#DDDDDD",
   dark_grey_color: "#666666",
   white_color: "#FFFFFF",

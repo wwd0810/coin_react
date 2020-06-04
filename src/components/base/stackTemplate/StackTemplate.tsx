@@ -8,6 +8,7 @@ import WebHeader from "components/common/header/web";
 interface Props extends RouteComponentProps, ReactCookieProps {
   title: String;
   children: React.ReactNode;
+  inquiry?: boolean;
 }
 
 class StackTemplate extends React.Component<Props> {
@@ -18,7 +19,11 @@ class StackTemplate extends React.Component<Props> {
   render() {
     return (
       <Wrap>
-        <StackHeader title={this.props.title} onPrev={this.onPrevClick} />
+        <StackHeader
+          title={this.props.title}
+          onPrev={this.onPrevClick}
+          inquiry={this.props.inquiry}
+        />
         <WebHeader title={this.props.title} />
         <div className="content">{this.props.children}</div>
       </Wrap>

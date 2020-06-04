@@ -1,36 +1,50 @@
-import React, { useState } from "react";
+import React from "react";
 import styled from "styled-components";
 import DealApplyItem from "./item";
 import { User, Account } from "stores/users/types";
 
-import Keypad from "components/common/keypad";
+import Modal from "components/common/modal";
+import { Dealing } from "stores/market/types";
 
 interface Props {
-  user: { user: User; account: Account };
+  open: boolean;
+  close: () => void;
+  duplicate: (pw: string) => void;
+  check: boolean;
+  high?: string;
+  low?: string;
+  user: { user: User; account: Account[] };
   postSell: (quantity: number, price: number) => void;
+  product?: Dealing;
 }
 
-function DealApply({ user, postSell }: Props) {
-  let quantity = 0;
-  let price = 0;
-
-  const [open, setOpen] = useState<boolean>(false);
-
+function DealApply({ user, postSell, high, low, open, close, product, duplicate, check }: Props) {
   const onPost = (quantity: number, price: number) => {
-    quantity = quantity;
-    price = price;
-
-    setOpen(true);
-  };
-
-  const handleClose = () => {
-    setOpen(false);
+    postSell(quantity, price);
   };
 
   return (
     <Wrap>
-      {open && <Keypad onPrev={handleClose} />}
-      <DealApplyItem account={user.account} postSell={onPost} />
+      <Modal open={open} type="one" close={close} title="등록 완료">
+        <ul>
+          <li>판매 등록이</li>
+          <li>정상적으로 완료되었습니다.</li>
+        </ul>
+      </Modal>
+      {user.account
+        .filter((data) => data.type !== "COIN_POINT")
+        .map((data, idx) => (
+          <DealApplyItem
+            check={check}
+            duplicate={duplicate}
+            account={data}
+            postSell={onPost}
+            high={high}
+            low={low}
+            product={product}
+            key={idx}
+          />
+        ))}
     </Wrap>
   );
 }

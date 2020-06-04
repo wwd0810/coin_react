@@ -1,19 +1,36 @@
 /* eslint-disable jsx-a11y/alt-text */
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import styled from "styled-components";
 import classnames from "classnames";
-
+import moment from "moment";
 import Modal from "components/common/modal";
 
 import PBOIcon from "assets/icons/pbo.png";
 import PBMIcon from "assets/icons/pbm.png";
 import WarnIcon from "assets/icons/warn.png";
+import { Dealing } from "stores/market/types";
+import regex from "lib/regex";
 
-interface Props {
-  type: "apply" | "accept" | "wait" | "finish" | "expiration";
+interface Props extends Dealing {
+  deposit: (id: number, purId: number) => void;
+  cancle: (id: number, purId: number) => void;
+  report: (id: number, purId: number, reason: string) => void;
 }
 
-function BuyItem({ type }: Props) {
+function BuyItem({
+  quantity,
+  price,
+  created_at,
+  updated_at,
+  seller,
+  id,
+  purchase,
+  status,
+  deposit,
+  report,
+  cancle,
+}: Props) {
+  const [opitonReport, setOptionReport] = useState<string>("사유선택");
   const [deleteOpen, setDeleteOpen] = useState<boolean>(false);
   const [acceptOpen, setAcceptOpen] = useState<boolean>(false);
   const [declarationOpen, setDeclarationOpen] = useState<boolean>(false);
@@ -60,12 +77,49 @@ function BuyItem({ type }: Props) {
     setWranOpen(false);
   };
 
+  const depositF = () => {
+    if (purchase) {
+      setAcceptOpen(false);
+      deposit(id, purchase?.id);
+    }
+  };
+
+  const reportF = () => {
+    if (purchase) {
+      setDeclarationOpen(false);
+      report(id, purchase?.id, opitonReport);
+    }
+  };
+
+  const cancleF = () => {
+    if (purchase) {
+      setDeleteOpen(false);
+      cancle(id, purchase?.id);
+    }
+  };
+
+  const onChangeOptionReport = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
+    e.preventDefault();
+
+    const { value } = e.target;
+
+    setOptionReport(value);
+  }, []);
+
   const typeCheck = () => {
-    if (type === "apply") return "구매신청(승인대기 중)";
-    if (type === "accept") return "승인완료";
-    if (type === "wait") return "입금 확인 중";
-    if (type === "finish") return "거래완료";
-    if (type === "expiration") return "기간만료";
+    // if (type === "apply") return "구매신청(승인대기 중)";
+    // if (type === "accept") return "승인완료";
+    // if (type === "wait") return "입금 확인 중";
+    // if (type === "finish") return "거래완료";
+    // if (type === "expiration") return "기간만료";
+
+    if (status === "ON_SALE" && purchase?.status === "WAITING_FOR_APPROVAL")
+      return "구매신청(승인대기 중)";
+    if (status === "ON_SALE" && purchase?.status === "WAITING_FOR_DEPOSIT") return "승인완료";
+    if (status === "ON_SALE" && purchase?.status === "DEPOSIT_COMPLETED") return "입금 확인 중";
+    if (status === "DONE") return "거래완료";
+    if (status === "INIT" && purchase?.status === "DENY") return "거래거절";
+    if (status === "EXPIRED") return "기간만료";
   };
 
   return (
@@ -75,83 +129,73 @@ function BuyItem({ type }: Props) {
         close={handleDeleteClose}
         type="two"
         title="신청취소 안내"
-        subChildren={"취소하시겠습니까?"}
+        onClick={cancleF}
       >
-        <div>
-          구매신청취소는
-          <br />
-          1일 1회만 가능하며, 이후에는
-          <br />
-          신청취소가 불가합니다.
-        </div>
+        <ul>
+          <li>구매신청취소는</li>
+          <li>1일 1회만 가능하며, 이후에는</li>
+          <li>신청취소가 불가합니다.</li>
+        </ul>
       </Modal>
       <Modal
         open={declarationOpen}
         close={handleDeclarationClose}
         type="two"
         title="신고 안내"
+        onClick={reportF}
         subChildren={
-          <select>
-            <option>사유선택</option>
-            <option>지체되는 입금확인</option>
-            <option>기타</option>
+          <select onChange={onChangeOptionReport} value={opitonReport}>
+            <option value="사유선택">사유선택</option>
+            <option value="구매자 인증 미비">허위 입금알림</option>
+            <option value="다른 구매자에게 판매">잘못된 입금금액</option>
+            <option value="판매중지 / 상품 삭제 예정">기타</option>
           </select>
         }
       >
-        <div>
-          판매자를 신고하려면,
-          <br />
-          사유를 선택하여주세요.
-        </div>
+        <ul>
+          <li>판매자를 신고하려면,</li>
+          <li>사유를 선택하여주세요.</li>
+        </ul>
       </Modal>
       <Modal
         open={acceptOpen}
         close={handleAcceptClose}
         type="two"
         title="입금 완료 안내"
-        subChildren={"알림을 보내시겠습니까?"}
+        onClick={depositF}
       >
-        <div>
-          허위로 입금완료를
-          <br />
-          하는 경우, 패널티가 부가되며,
-          <br />
-          거래는 자동 취소됩니다.
-        </div>
+        <ul>
+          <li>허위로 입금완료를</li>
+          <li>하는 경우, 패널티가 부가되며,</li>
+          <li>거래는 자동 취소됩니다.</li>
+        </ul>
       </Modal>
       <Modal
         open={infoOpen}
         close={handleInfoClose}
         type="one"
         title="판매자 정보"
-        subChildren={`국민 000-00-000000`}
+        subChildren={<div>국민 {purchase?.buyer.phone}</div>}
       >
-        <div>
-          <span>
-            <img src={PBOIcon} />
-            <span>
-              HOJOGroup<em> 님</em>
-            </span>
-          </span>
-          {/* <br /> */}
-          <em>보안 2 등급</em>
-        </div>
+        <ul>
+          <li>{purchase?.buyer.name} 님</li>
+          <li>보안등급 1 등급</li>
+        </ul>
       </Modal>
       <Modal open={wranOpen} close={handleWranClose} type="one" title="허위 알림 안내">
-        <div>
-          허위로 입금완료를
-          <br />
-          하는 경우, 패널티가 부가되며,
-          <br />
-          거래는 자동 취소됩니다.
-        </div>
+        <ul>
+          <li>허위로 입금완료를</li>
+          <li>하는 경우, 패널티가 부가되며,</li>
+          <li>거래는 자동 취소됩니다.</li>
+        </ul>
       </Modal>
       <div className="title">
         <div className="left-box">
           <span>P000258344NK</span>
-          <em>등록일 : 2020.02.02 02:02</em>
+          <em>등록일 : {moment(created_at).format("YYYY-MM-DD HH:mm")}</em>
         </div>
-        {type === "wait" || type === "accept" ? (
+        {(status === "ON_SALE" && purchase?.status === "DEPOSIT_COMPLETED ") ||
+        (status === "ON_SALE" && purchase?.status === "WAITING_FOR_DEPOSIT") ? (
           <div className="img-box">
             <img src={WarnIcon} onClick={handleWranOpen} />
           </div>
@@ -160,49 +204,66 @@ function BuyItem({ type }: Props) {
       <div className="info">
         <div>
           <span>결제 금액</span>
-          <span className="krw">152,000 KRW(원)</span>
+          <span className="krw">{regex.moneyRegex(Number(quantity) * Number(price))} KRW(원)</span>
         </div>
         <div>
           <span>코인 수량</span>
-          <span>100 DL(딜링)</span>
+          <span>{regex.moneyRegex(Number(quantity))} DL(딜링)</span>
         </div>
         <div>
           <span>개당 가격</span>
-          <span>1.520 KRW(원)</span>
+          <span>{regex.moneyRegex(Number(price))} KRW(원)</span>
         </div>
       </div>
       <div className="status">
         <div>
           <span
-            className={classnames("", {
-              "user-info": type !== "apply" && type !== "finish" && type !== "expiration",
-              "display-none": type === "apply" || type === "finish" || type === "expiration",
+            className={classnames("user-info", {
+              "user-info":
+                purchase?.status === "WAITING_FOR_APPROVAL" &&
+                status !== "DONE" &&
+                status !== "EXPIRED",
+              "display-none":
+                (status === "ON_SALE" && purchase?.status === "WAITING_FOR_APPROVAL") ||
+                status === "DONE" ||
+                status === "EXPIRED",
             })}
           >
-            <img src={type === "accept" ? PBOIcon : PBMIcon} />
-            <em>HOJOGroup</em>
+            {/* <img
+              src={
+                status === "ON_SALE" && purchase?.status === "WAITING_FOR_DEPOSIT"
+                  ? PBOIcon
+                  : PBMIcon
+              }
+            /> */}
+            <em>{seller.name}</em>
           </span>
         </div>
         <span
           className={classnames("", {
-            "skyblue-font": type === "accept",
+            "skyblue-font":
+              (status === "ON_SALE" && purchase?.status === "WAITING_FOR_DEPOSIT") ||
+              (status === "INIT" && purchase?.status === "DENY"),
           })}
         >
-          {typeCheck()} : 02.02 02:30
+          {typeCheck()} : {moment(updated_at).format("MM.DD HH:mm")}
         </span>
       </div>
       <div
         className={classnames("btn-box", {
-          "display-none": type === "expiration" || type === "finish",
+          "display-none":
+            status === "EXPIRED" ||
+            status === "DONE" ||
+            (status === "INIT" && purchase?.status === "DENY"),
         })}
       >
-        {type === "apply" ? (
+        {status === "ON_SALE" && purchase?.status === "WAITING_FOR_APPROVAL" ? (
           <div>
             <button className="bg-grey" onClick={handleDeleteOpen}>
               신청 취소
             </button>
           </div>
-        ) : type === "accept" ? (
+        ) : status === "ON_SALE" && purchase?.status === "WAITING_FOR_DEPOSIT" ? (
           <div>
             <button className="bg-grey" onClick={handleInfoOpen}>
               판매자정보
@@ -212,7 +273,7 @@ function BuyItem({ type }: Props) {
               입금완료
             </button>
           </div>
-        ) : type === "wait" ? (
+        ) : status === "ON_SALE" && purchase?.status === "DEPOSIT_COMPLETED" ? (
           <div>
             <button className="bg-primary" onClick={handleDeclarationOpen}>
               판매자 신고

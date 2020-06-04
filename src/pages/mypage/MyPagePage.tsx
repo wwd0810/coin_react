@@ -5,7 +5,7 @@ import MyPageContainer from "containers/mypage/MyPageContainer";
 
 function MyPagePage() {
   return (
-    <BaseTemplate seletedItem="mypage" title="마이페이지">
+    <BaseTemplate seletedItem="mypage" title="마이페이지" my={true}>
       <MyPageContainer />
     </BaseTemplate>
   );

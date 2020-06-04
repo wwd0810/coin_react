@@ -22,3 +22,22 @@ export type Account = {
   created_at: Date;
   updated_at?: Date;
 };
+
+export type UserActivity = {
+  like: number;
+  sell: number;
+  buy: number;
+};
+
+export type PointType = {
+  id: number;
+  title: string;
+  description: string;
+  amount: string;
+  to: Account;
+  from: Account;
+  from_user?: User;
+  to_user?: User;
+  created_at: Date;
+  updated_at?: Date;
+};
