@@ -1,4 +1,4 @@
-import { observable, flow, computed } from "mobx";
+import { observable, flow, computed, action } from "mobx";
 
 import BaseStore from "stores/BaseStore";
 import RootStore from "stores";
@@ -63,6 +63,11 @@ class MarketStore extends BaseStore {
   @computed
   get MySell() {
     return this._mySell;
+  }
+
+  @action
+  public reset() {
+    this._product = undefined;
   }
 
   GetMarketCondition = flow(function* (this: MarketStore) {
@@ -166,40 +171,6 @@ class MarketStore extends BaseStore {
     }
   });
 
-  GetMySell = flow(function* (
-    this: MarketStore,
-    page: number,
-    status?: string,
-    duration?: string,
-    more?: boolean,
-  ) {
-    this._init("GET_MY_SELL");
-
-    try {
-      const {
-        data: res,
-      }: {
-        data: ApiResult<{ markets: Dealing[]; paging: Paging }>;
-      } = yield MarketService.GetMySellAPI(page, status, duration);
-
-      const { markets, paging } = res.data;
-
-      if (more) {
-        this._mySell = this._mySell.concat(markets);
-      } else {
-        this._mySell = markets;
-      }
-
-      this._paging = paging;
-
-      this._success["GET_MY_SELL"] = true;
-    } catch (e) {
-      this._failure["GET_MY_SELL"] = [true, e];
-    } finally {
-      this._pending["GET_MY_SELL"] = false;
-    }
-  });
-
   PostPoint = flow(function* (this: MarketStore, amount: number) {
     this._init("POST_POINT");
 
@@ -235,20 +206,75 @@ class MarketStore extends BaseStore {
   // 판매
   // ======================================================================
 
-  PostSell = flow(function* (this: MarketStore, quantity: number, price: number) {
+  GetMySell = flow(function* (
+    this: MarketStore,
+    page: number,
+    status?: string,
+    duration?: string,
+    more?: boolean,
+    query?: string,
+  ) {
+    this._init("GET_MY_SELL");
+
+    try {
+      const {
+        data: res,
+      }: {
+        data: ApiResult<{ markets: Dealing[]; paging: Paging }>;
+      } = yield MarketService.GetMySellAPI(page, status, duration, query);
+
+      const { markets, paging } = res.data;
+
+      if (more) {
+        this._mySell = this._mySell.concat(markets);
+      } else {
+        this._mySell = markets;
+      }
+
+      this._paging = paging;
+
+      this._success["GET_MY_SELL"] = true;
+    } catch (e) {
+      this._failure["GET_MY_SELL"] = [true, e];
+    } finally {
+      this._pending["GET_MY_SELL"] = false;
+    }
+  });
+
+  PostSell = flow(function* (this: MarketStore, quantity: number, price: number, password: string) {
     this._init("POST_SELL");
     try {
       const form = new FormData();
       form.set("quantity", quantity.toString());
       form.set("price", price.toString());
 
-      yield MarketService.PostSellAPI("DILLING", quantity, price);
+      yield MarketService.PostSellAPI("DILLING", quantity, price, password);
 
       this._success["POST_SELL"] = true;
     } catch (e) {
       this._failure["POST_SELL"] = [true, e];
     } finally {
       this._pending["POST_SELL"] = false;
+    }
+  });
+
+  PatchSell = flow(function* (
+    this: MarketStore,
+    idx: number,
+    amount: number,
+    price: number,
+    password: string,
+  ) {
+    this._init("PATCH_SELL");
+
+    try {
+      yield MarketService.PatchSellAPI(idx, "DILLING", amount, price, password);
+
+      this._success["PATCH_SELL"] = true;
+    } catch (e) {
+      this._failure["PATCH_SELL"] = [true, e];
+    } finally {
+      this._pending["PATCH_SELL"] = false;
     }
   });
 
@@ -350,7 +376,8 @@ class MarketStore extends BaseStore {
   GetPurchases = flow(function* (
     this: MarketStore,
     page: number,
-    order: string,
+    status: string,
+    duration?: string,
     query?: string,
     more?: boolean,
   ) {
@@ -361,7 +388,7 @@ class MarketStore extends BaseStore {
         data: res,
       }: {
         data: ApiResult<{ list: Dealing[]; paging: Paging }>;
-      } = yield MarketService.GetpurchasesAPI();
+      } = yield MarketService.GetpurchasesAPI(page, status, duration, query);
 
       const { list, paging } = res.data;
 

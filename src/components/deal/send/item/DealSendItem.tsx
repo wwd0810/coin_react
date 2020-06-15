@@ -12,7 +12,7 @@ import regex from "lib/regex";
 interface Props {
   account: Account;
   addr: string;
-  post: (price: string) => void;
+  post: (price: string, password: number) => void;
   duplicate: (pw: string) => void;
   check: boolean;
 }
@@ -21,15 +21,22 @@ function DealSendItem({ account, post, addr, check, duplicate }: Props) {
   const [key, setKey] = useState<boolean>(false);
   const [open, setOpen] = useState<boolean>(false);
   const [send, setSend] = useState<boolean>(false);
-
+  const [pass, setPass] = useState<number>();
   const [price, setPrice] = useState<string>("");
 
+  // useEffect(() => {
+  //   if (check) {
+  //     setKey(false);
+  //     post(price.toString());
+  //   }
+  // }, [check, price, post]);
+
   useEffect(() => {
-    if (check) {
-      setKey(false);
-      post(price.toString());
+    if (pass) {
+      post(price.toString(), pass);
     }
-  }, [check, price, post]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pass]);
 
   const onChangePrice = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -74,8 +81,14 @@ function DealSendItem({ account, post, addr, check, duplicate }: Props) {
     setKey(false);
   };
 
+  const reset = () => {
+    setPrice("");
+  };
+
   const duplicatePin = (pw: string) => {
-    duplicate(pw);
+    // duplicate(pw);
+    setOpen(false);
+    setPass(Number(pw));
   };
 
   const postSend = () => {
@@ -114,7 +127,7 @@ function DealSendItem({ account, post, addr, check, duplicate }: Props) {
             {Number(price) > account.quantity && <span>CP가 모자랍니다. CP를 충전해주세요.</span>}
           </div>
           <div className="btn-box">
-            <button>초기화</button>
+            <button onClick={reset}>초기화</button>
             <button onClick={handSendOpen}>다음</button>
           </div>
           <div className="notice">

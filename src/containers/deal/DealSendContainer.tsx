@@ -27,6 +27,14 @@ class DealSendContainer extends React.Component<Props, State> {
 
   async componentDidMount() {
     await this.UserStore.GetUser();
+
+    if (this.UserStore.User) {
+      if (!this.UserStore.User?.other.check_pin) {
+        alert("PIN 비밀번호 설정이 필요합니다.");
+
+        this.props.history.push("/mypage");
+      }
+    }
   }
 
   findUser = async (type: string, query: string) => {
@@ -37,11 +45,11 @@ class DealSendContainer extends React.Component<Props, State> {
     }
   };
 
-  post = async (to: string, type: string, amount: string) => {
+  post = async (to: string, type: string, amount: string, password: number) => {
     const res = this.UserStore.User?.account.filter((data) => data.type === "DILLING")[0].id;
-    this.UserStore.checkReset();
+
     if (res) {
-      await this.UserStore.PostSend(res, to, type, amount);
+      await this.UserStore.PostSend(res, to, type, amount, password);
 
       if (this.UserStore.success["POST_SEND"]) {
         this.setState({ open: true });

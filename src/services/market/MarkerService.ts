@@ -14,10 +14,6 @@ class MarketService {
     return client.get(`/api/markets/${idx}`);
   }
 
-  public GetMySellAPI(page: number, status?: string, duration?: string) {
-    return client.get(`/api/markets/sell`, { params: { page, status, duration } });
-  }
-
   public PostPointAPI(data: FormData) {
     return client.post(`/api/markets/charge/cp`, data);
   }
@@ -35,12 +31,27 @@ class MarketService {
   // ======================================================================
 
   // 판매 등록
-  public PostSellAPI(type: string, amount: number, price: number) {
+  public PostSellAPI(type: string, amount: number, price: number, password: string) {
     return client.post(`/api/markets/sell`, {
       type: type,
       amount: amount,
       price: price,
+      password,
     });
+  }
+
+  public PatchSellAPI(idx: number, type: string, amount: number, price: number, password: string) {
+    return client.patch(`/api/markets/${idx}`, {
+      type: type,
+      amount: amount,
+      price: price,
+      password,
+    });
+  }
+
+  // 판매내역
+  public GetMySellAPI(page: number, status?: string, duration?: string, query?: string) {
+    return client.get(`/api/markets/sell`, { params: { page, status, duration, query } });
   }
 
   // 구매자 확인
@@ -75,8 +86,15 @@ class MarketService {
   // ======================================================================
 
   // 구매 내역
-  public GetpurchasesAPI() {
-    return client.get(`/api/markets/purchases`);
+  public GetpurchasesAPI(page?: number, status?: string, duration?: string, query?: string) {
+    return client.get(`/api/markets/purchases`, {
+      params: {
+        page,
+        status,
+        duration,
+        query,
+      },
+    });
   }
 
   // 구매 요청 취소

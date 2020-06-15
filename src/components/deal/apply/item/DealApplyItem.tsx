@@ -22,31 +22,42 @@ interface Props {
   product?: Dealing;
   duplicate: (pw: string) => void;
   check: boolean;
-  postSell: (quantity: number, price: number) => void;
+  postSell: (quantity: number, price: number, password: string) => void;
+  update: (idx: number, amount: number, price: number, password: string) => void;
 }
 
-function DealApplyItem({ account, postSell, high, low, product, duplicate, check }: Props) {
+function DealApplyItem({ account, postSell, high, low, product, duplicate, check, update }: Props) {
   const [key, setKey] = useState<boolean>(false);
   const [open, setOpen] = useState<boolean>(true);
   const [apply, setApply] = useState<boolean>(false);
   const [price, setPrice] = useState<string>("100");
   const [quantity, setQuantity] = useState<string>("");
+  const [pass, setPass] = useState<string>("");
 
   useEffect(() => {
     if (product) {
+      console.log(1);
       setPrice(product.price.toString());
       setQuantity(product.quantity.toString());
     }
+  }, [product, check, postSell, update]);
 
-    if (check) {
-      setKey(false);
+  useEffect(() => {
+    console.log(pass);
+    const quan = Number(quantity);
+    const pri = Number(price);
 
-      const quan = Number(quantity);
-      const pri = Number(price);
-
-      postSell(quan, pri);
+    if (product) {
+      if (pass) {
+        update(product.id, quan, pri, pass);
+      }
+    } else {
+      if (pass) {
+        postSell(quan, pri, pass);
+      }
     }
-  }, [product, check, quantity, price, postSell]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pass]);
 
   const handleOpen = useCallback(
     (e: any) => {
@@ -66,7 +77,8 @@ function DealApplyItem({ account, postSell, high, low, product, duplicate, check
   };
 
   const duplicatePin = (pw: string) => {
-    duplicate(pw);
+    setOpen(false);
+    setPass(pw);
   };
 
   const onChangePrice = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -168,7 +180,7 @@ function DealApplyItem({ account, postSell, high, low, product, duplicate, check
             판매가<span>{regex.moneyRegex(Number(quantity) * Number(price))} KRW</span>
           </li>
           <li className="sb-box">
-            전송 수수료<span>{regex.moneyRegex(Number(quantity) * Number(price) * 0.05)} CP</span>
+            전송 수수료<span>{regex.moneyRegex(Number(quantity) * Number(price) * 0.005)} CP</span>
           </li>
         </ul>
       </Modal>

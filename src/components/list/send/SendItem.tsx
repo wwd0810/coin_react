@@ -25,15 +25,15 @@ function SendItem({ title, amount, created_at, to_user, from_user, to, from, acc
       const id = account.id;
 
       if (title.includes("구매")) {
-        if (to.id === id) return "구매";
+        if (to?.id === id) return "구매";
 
-        if (from.id === id) return "판매";
+        if (from?.id === id) return "판매";
       }
 
       if (title.includes("전송")) {
-        if (to.id === id) return "입금";
+        if (to?.id === id) return "입금";
 
-        if (from.id === id) return "전송";
+        if (from?.id === id) return "전송";
       }
 
       if (title.includes("환불")) {

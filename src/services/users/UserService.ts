@@ -59,12 +59,13 @@ class UserService {
     return client.get(`/api/users/search`, { params: { type, query } });
   }
 
-  public PostSendAPI(from: string, to: string, type: string, amount: string) {
+  public PostSendAPI(from: string, to: string, type: string, amount: string, password: number) {
     return client.post(`/api/users/me/account/remit`, {
       from: from,
       to: to,
       type: type,
       amount: amount,
+      password,
     });
   }
 
@@ -72,8 +73,19 @@ class UserService {
     return client.post(`/api/markets/${idx}/like`);
   }
 
-  public GetCPListAPI(code: string, page?: number) {
-    return client.get(`/api/users/me/account/${code}/tx`, { params: { page } });
+  public GetCPListAPI(code: string, page?: number, query?: string, status?: string) {
+    return client.get(`/api/users/me/account/${code}/tx`, {
+      params: { page, duration: query, status },
+    });
+  }
+
+  //  Pin
+  public DuplicatePin(password: string) {
+    return client.get(`/api/users/me/pin/duplicate`, { params: { password } });
+  }
+
+  public PatchPin(password: string) {
+    return client.patch(`/api/users/me/pin`, qs.stringify({ password }));
   }
 }
 

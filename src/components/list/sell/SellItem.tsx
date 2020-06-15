@@ -108,6 +108,12 @@ function SellItem({
     del(id);
   };
 
+  const productCode = (id: number) => {
+    const str = "00000000000" + id.toString();
+
+    return str.slice(-10);
+  };
+
   const onChangeOption = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
     e.preventDefault();
 
@@ -264,7 +270,7 @@ function SellItem({
       </Modal>
       <div className="title">
         <div className="left-box">
-          <span>P000258344NK</span>
+          <span>P{productCode(id)}NK</span>
           <em>등록일 : {moment(created_at).format("YYYY-MM-DD HH:MM")}</em>
         </div>
         {status === "ON_SALE" && purchase?.status === "WAITING_FOR_DEPOSIT" ? (
@@ -338,9 +344,7 @@ function SellItem({
               승인
             </button>
           </div>
-        ) : status === "ON_SALE" &&
-          (purchase?.status === "DEPOSIT_COMPLETED" ||
-            purchase?.status === "WAITING_FOR_DEPOSIT") ? (
+        ) : status === "ON_SALE" && purchase?.status === "DEPOSIT_COMPLETED" ? (
           <div>
             <button className="bg-grey" onClick={handleDeclarationOpen}>
               구매자 신고
@@ -354,6 +358,9 @@ function SellItem({
     </Wrap>
   );
 }
+
+// ||
+//             purchase?.status === "WAITING_FOR_DEPOSIT"
 
 const Wrap = styled.div`
 

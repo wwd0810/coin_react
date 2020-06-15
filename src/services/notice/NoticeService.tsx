@@ -1,8 +1,12 @@
 import client from "lib/client";
 
 class NoticeService {
-  public GetNoticeListAPI() {
-    return client.get(`/api/notices`);
+  public GetNoticeListAPI(page: number) {
+    return client.get(`/api/notices`, {
+      params: {
+        page,
+      },
+    });
   }
 
   // status 'NOT_READ', 'READ' 이거 꼭보내야하는지 나중에 판단

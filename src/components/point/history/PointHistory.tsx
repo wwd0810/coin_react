@@ -1,5 +1,5 @@
 /* eslint-disable jsx-a11y/alt-text */
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import styled from "styled-components";
 import { Link } from "react-router-dom";
 
@@ -12,11 +12,12 @@ import { Paging } from "stores/market/types";
 interface Props {
   paging?: Paging;
   cpList: PointType[];
-  more: (page: number) => void;
+  more: (page: number, duration?: string) => void;
 }
 
 function PointHistory({ cpList, more, paging }: Props) {
   const [page, setPage] = useState<number>(0);
+  const [duration, setDuration] = useState<string>("");
 
   // let page: number = 0;
 
@@ -25,11 +26,21 @@ function PointHistory({ cpList, more, paging }: Props) {
       e.preventDefault();
 
       setPage(page + 1);
-
-      more(page + 1);
     },
-    [more, page],
+    [page],
   );
+
+  const onChangeDuration = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
+    e.preventDefault();
+
+    const { value } = e.target;
+
+    setDuration(value);
+  }, []);
+
+  useEffect(() => {
+    more(page, duration);
+  }, [more, page, duration]);
 
   return (
     <Wrap>
@@ -41,8 +52,14 @@ function PointHistory({ cpList, more, paging }: Props) {
       </Link>
 
       <div className="search">
-        <select>
-          <option>전체(기간)</option>
+        <select value={duration} onChange={onChangeDuration}>
+          <option value="">전체(기간)</option>
+          <option value="TODAY">오늘</option>
+          <option value="1WEEK">1주일</option>
+          <option value="1MONTH">1개월</option>
+          <option value="3MONTH">3개월</option>
+          <option value="6MONTH">6개월</option>
+          <option value="1YEAR">1년</option>
         </select>
       </div>
       <div className="list">

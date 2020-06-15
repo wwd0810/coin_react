@@ -16,20 +16,20 @@ class PointHistoryContainer extends React.Component<Props> {
   private UserStore = this.props.userStore! as UserStore;
 
   async componentDidMount() {
-    if (this.UserStore.User?.account.filter((data) => data.type === "COIN_POINT")) {
-      const code = this.UserStore.User?.account.filter((data) => data.type === "COIN_POINT")[0].id;
-      await this.UserStore.GetPointList(code);
-    }
-    if (this.UserStore.failure["GET_POINT_LIST"][0]) {
-      const code = parse(this.UserStore.failure["GET_POINT_LIST"][1]);
-      alert(code);
-    }
+    // if (this.UserStore.User?.account.filter((data) => data.type === "COIN_POINT")) {
+    //   const code = this.UserStore.User?.account.filter((data) => data.type === "COIN_POINT")[0].id;
+    //   await this.UserStore.GetPointList(code);
+    // }
+    // if (this.UserStore.failure["GET_POINT_LIST"][0]) {
+    //   const code = parse(this.UserStore.failure["GET_POINT_LIST"][1]);
+    //   alert(code);
+    // }
   }
 
-  moreGet = async (page: number) => {
+  moreGet = async (page: number, duration?: string) => {
     if (this.UserStore.User?.account.filter((data) => data.type === "COIN_POINT")) {
       const code = this.UserStore.User?.account.filter((data) => data.type === "COIN_POINT")[0].id;
-      await this.UserStore.GetPointList(code, page);
+      await this.UserStore.GetPointList(code, page, duration);
     }
 
     if (this.UserStore.failure["GET_POINT_LIST"][0]) {

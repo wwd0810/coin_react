@@ -18,17 +18,21 @@ class ListContainer extends React.Component<Props> {
   private MarketStore = this.props.marketStore! as MarketStore;
   private UserStore = this.props.userStore! as UserStore;
 
-  async componentDidMount() {
-    console.log(1);
-  }
+  async componentDidMount() {}
 
   // ======================================================================
   // 판매 내약
   // ======================================================================
 
   // 판매내역 리스트
-  getList = async (page: number, status: string, duration: string, more?: boolean) => {
-    await this.MarketStore.GetMySell(page, status, duration, more);
+  getList = async (
+    page: number,
+    status: string,
+    duration: string,
+    more?: boolean,
+    query?: string,
+  ) => {
+    await this.MarketStore.GetMySell(page, status, duration, more, query);
 
     if (this.MarketStore.failure["GET_MY_SELL"][0]) {
       const code = parse(this.MarketStore.failure["GET_MY_SELL"][1]);
@@ -107,8 +111,14 @@ class ListContainer extends React.Component<Props> {
   // ======================================================================
 
   // 구매 내역
-  getBuyList = async (page: number, status: string, duration: string, more?: boolean) => {
-    await this.MarketStore.GetPurchases(page, status, duration, more);
+  getBuyList = async (
+    page: number,
+    status: string,
+    duration: string,
+    more?: boolean,
+    query?: string,
+  ) => {
+    await this.MarketStore.GetPurchases(page, status, duration, query, more);
 
     if (this.MarketStore.failure["GET_PURCHASES"][0]) {
       const code = parse(this.MarketStore.failure["GET_PURCHASES"][1]);
@@ -158,12 +168,12 @@ class ListContainer extends React.Component<Props> {
   // ======================================================================
 
   // 전송 내역 리스트
-  getSendList = async (page: number) => {
+  getSendList = async (page: number, query?: string, status?: string) => {
     if (this.UserStore.User?.account.filter((data) => data.type === "DILLING")) {
       const code = this.UserStore.User?.account.filter((data) => data.type === "DILLING")[0].id;
+      await this.UserStore.GetPointList(code, page, query, status);
 
-      console.log(code);
-      await this.UserStore.GetPointList(code, page);
+      console.log(this.UserStore.CPList);
     }
 
     if (this.UserStore.failure["GET_POINT_LIST"][0]) {

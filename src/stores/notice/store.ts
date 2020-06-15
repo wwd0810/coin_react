@@ -71,19 +71,25 @@ class NoticeStore extends BaseStore {
     return this._paging;
   }
 
-  GetNoticeList = flow(function* (this: NoticeStore) {
+  GetNoticeList = flow(function* (this: NoticeStore, page: number) {
     this._init("GET_NOTICE_LIST");
 
     try {
       const {
         data: res,
       }: {
-        data: ApiResult<{ list: NoticeType[] }>;
-      } = yield NoticeService.GetNoticeListAPI();
+        data: ApiResult<{ list: NoticeType[]; paging: Paging }>;
+      } = yield NoticeService.GetNoticeListAPI(page);
 
-      const { list } = res.data;
+      const { list, paging } = res.data;
 
-      this._noticeList = list;
+      if (page === 0) {
+        this._noticeList = list;
+      } else {
+        this._noticeList = this._noticeList.concat(list);
+      }
+
+      this._paging = paging;
 
       this._success["GET_NOTICE_LIST"] = true;
     } catch (e) {

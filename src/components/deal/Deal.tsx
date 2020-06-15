@@ -66,6 +66,10 @@ function Deal({ info, deal, paging, getList, postLike, buy }: Props) {
     }
   };
 
+  const onSearch = () => {
+    getList(state.page, state.sort, searchRef.current?.value);
+  };
+
   const toggleLike = (idx: number) => {
     postLike(idx);
   };
@@ -116,7 +120,7 @@ function Deal({ info, deal, paging, getList, postLike, buy }: Props) {
             onKeyPress={enterPress}
             placeholder="아이디 & 전화번호 검색"
           />
-          <img src={SearchIcon} />
+          <img src={SearchIcon} onClick={onSearch} />
         </div>
         <div className="result-box">
           <span>전체결과</span>

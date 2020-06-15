@@ -46,6 +46,10 @@ class CallbackContainer extends React.Component<Props> {
       window.localStorage.setItem("auth", LoginData!);
       window.localStorage.setItem("refresh", RefreshData!);
 
+      window.receiveToken = (str: string) => {
+        this.UserStore.UpdateFcmToken(str);
+      };
+
       this.props.history.push("/");
     } else {
       if (this.UserStore.failure["GET_USER_TOKEN"][0]) {

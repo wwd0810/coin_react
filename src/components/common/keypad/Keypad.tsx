@@ -8,9 +8,11 @@ import PrevIcon from "assets/icons/prev.png";
 interface Props {
   onPrev?: () => void;
   go?: (pw: string) => void;
+  modify?: boolean;
+  more?: boolean;
 }
 
-function Keypad({ onPrev, go }: Props) {
+function Keypad({ onPrev, go, modify, more }: Props) {
   const pw = [1, 2, 3, 4, 5, 6];
   const keyname = [1, 2, 3, 4, 5, 6, 7, 8, 9];
   const [str, setStr] = useState<string>("");
@@ -46,7 +48,13 @@ function Keypad({ onPrev, go }: Props) {
     <Wrap>
       <img src={PrevIcon} onClick={onPrev} />
       <div className="password">
-        <span>암호를 입력하세요.</span>
+        <span>
+          {more
+            ? "새 암호를 확인해주세요."
+            : modify
+            ? "새 암호를 입력하세요."
+            : "암호를 입력하세요."}
+        </span>
         <div>
           {pw.map((data, idx) => (
             <div
@@ -60,7 +68,7 @@ function Keypad({ onPrev, go }: Props) {
       </div>
       <div className="key-box">
         {keyname.map((data, idx) => (
-          <button className="key" id={idx.toString()} onClick={onChange} key={idx}>
+          <button className="key" id={(idx + 1).toString()} onClick={onChange} key={idx}>
             {data}
           </button>
         ))}

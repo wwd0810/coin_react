@@ -62,7 +62,7 @@ function SendModal({ open, close, children, addr, quan, onClick }: Props) {
                   전송 수량<span>{quan} DL</span>
                 </li>
                 <li>
-                  전송 수수료<span>{Number(quan) * 0.05} CP</span>
+                  전송 수수료<span>{Number(quan) * 0.005} CP</span>
                 </li>
               </ul>
             </div>

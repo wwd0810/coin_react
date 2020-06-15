@@ -34,10 +34,15 @@ export type PointType = {
   title: string;
   description: string;
   amount: string;
-  to: Account;
-  from: Account;
+  to?: Account;
+  from?: Account;
   from_user?: User;
   to_user?: User;
   created_at: Date;
   updated_at?: Date;
+};
+
+export type OtherType = {
+  unread_noti: boolean;
+  check_pin: boolean;
 };

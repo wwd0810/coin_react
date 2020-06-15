@@ -14,13 +14,25 @@ interface Props {
   high?: string;
   low?: string;
   user: { user: User; account: Account[] };
-  postSell: (quantity: number, price: number) => void;
+  postSell: (quantity: number, price: number, password: string) => void;
+  update: (idx: number, amount: number, price: number, password: string) => void;
   product?: Dealing;
 }
 
-function DealApply({ user, postSell, high, low, open, close, product, duplicate, check }: Props) {
-  const onPost = (quantity: number, price: number) => {
-    postSell(quantity, price);
+function DealApply({
+  user,
+  postSell,
+  high,
+  low,
+  open,
+  close,
+  product,
+  duplicate,
+  check,
+  update,
+}: Props) {
+  const onPost = (quantity: number, price: number, password: string) => {
+    postSell(quantity, price, password);
   };
 
   return (
@@ -43,6 +55,7 @@ function DealApply({ user, postSell, high, low, open, close, product, duplicate,
             low={low}
             product={product}
             key={idx}
+            update={update}
           />
         ))}
     </Wrap>

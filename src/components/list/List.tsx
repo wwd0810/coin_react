@@ -20,7 +20,7 @@ interface Props {
   account?: Account;
 
   // 판매 내역 관련
-  getList: (page: number, status: string, duration: string, more?: boolean) => void;
+  getList: (page: number, status: string, duration: string, more?: boolean, query?: string) => void;
   del: (idx: number) => void;
   deny: (id: number, purId: number, reason: string) => void;
   accept: (id: number, purId: number) => void;
@@ -28,13 +28,19 @@ interface Props {
   buyerReport: (id: number, purId: number, reason: string) => void;
 
   // 구매 내역 관련
-  getBuyList: (page: number, status: string, duration: string, more?: boolean) => void;
+  getBuyList: (
+    page: number,
+    status: string,
+    duration: string,
+    more?: boolean,
+    query?: string,
+  ) => void;
   deposit: (id: number, purId: number) => void;
   cancle: (id: number, purId: number) => void;
   sellerRepost: (id: number, purId: number, reason: string) => void;
 
   // 전송 내역 관련
-  getSendList: (page: number) => void;
+  getSendList: (page: number, query?: string, status?: string) => void;
 }
 
 function List({
@@ -63,12 +69,17 @@ function List({
   const [search, setSearch] = useState<string>("");
   const [more, setMore] = useState<boolean>(false);
 
+  const [sendStatus, setSendStatus] = useState<string>("");
+
   const onChangeMenu = useCallback((e: any) => {
     e.preventDefault();
 
     const { id } = e.target;
 
     setPage(0);
+    setDuration("");
+    setSearch("");
+    setStatus("");
 
     setSelected(Number(id));
   }, []);
@@ -94,6 +105,14 @@ function List({
     setDuration(value);
   }, []);
 
+  const onChangeSendStatus = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
+    e.preventDefault();
+
+    const { value } = e.target;
+
+    setSendStatus(value);
+  }, []);
+
   const onChangeSearch = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     e.preventDefault();
 
@@ -106,16 +125,53 @@ function List({
     del(idx);
   };
 
+  const onSearch = () => {
+    if (page === 0) {
+      let query = search.toLowerCase();
+      let count = 0;
+      query = query.replace("p", "");
+
+      query = query.replace("nk", "");
+
+      while (true) {
+        if (query[count] !== "0") break;
+
+        query = query.replace("0", "");
+      }
+
+      // for(let i = 0; i < query.length; i++) {
+      //   if(query[i] === "0") {
+      //     query()
+      //   }
+      // }
+
+      if (selected === 2) getSendList(page, query);
+      else if (selected === 1) getBuyList(page, status, duration, more, query);
+      else if (selected === 0) getList(page, status, duration, more, query);
+
+      return;
+    } else {
+      setPage(0);
+    }
+  };
+
   useEffect(() => {
-    if (selected === 2) {
-      getSendList(page);
-    } else if (selected === 1) {
+    // if (selected === 2) {
+    // getSendList(page, search);
+    if (selected === 1) {
       getBuyList(page, status, duration, more);
     } else if (selected === 0) {
-      getList(page, status, duration, more);
+      getList(page, status, duration, more, search);
     }
     console.log(1);
-  }, [duration, getList, more, page, status, selected, getSendList, getBuyList]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [getList, more, page, selected, getSendList, getBuyList]);
+
+  useEffect(() => {
+    if (selected === 2) {
+      getSendList(page, duration, sendStatus);
+    }
+  }, [duration, getSendList, page, selected, sendStatus]);
 
   //  {/* <SellItem type="sell" />
   //           <SellItem type="apply" />
@@ -159,6 +215,39 @@ function List({
         </div>
         <div className="search-box">
           {selected !== 2 ? (
+            <>
+              <div className="select-box">
+                <select value={duration} onChange={onChangeDuration}>
+                  <option value="">전체(기간)</option>
+                  <option value="TODAY">오늘</option>
+                  <option value="1WEEK">1주일</option>
+                  <option value="1MONTH">1개월</option>
+                  <option value="3MONTH">3개월</option>
+                  <option value="6MONTH">6개월</option>
+                  <option value="1YEAR">1년</option>
+                </select>
+                <select value={status} onChange={onChangeStatus}>
+                  <option value="">전체(상태)</option>
+                  {selected === 0 && <option value="INIT">판매중</option>}
+                  <option value="ON_SALE">거래중</option>
+                  {/* <option value="PURCHASE_REQUEST_RECEIVED">구매신청받음</option>
+                <option value="WAITING_FOR_DEPOSIT">입금대기중</option>
+                <option value="DEPOSIT_COMPLETED ">입금완료</option> */}
+                  <option value="DONE ">거래완료</option>
+                  <option value="EXPIRED">기간만료</option>
+                </select>
+              </div>
+              <div className="input-box">
+                <input
+                  type="text"
+                  value={search}
+                  onChange={onChangeSearch}
+                  placeholder="물품번호 검색"
+                />
+                <img src={SearchIcon} onClick={onSearch} />
+              </div>
+            </>
+          ) : (
             <div className="select-box">
               <select value={duration} onChange={onChangeDuration}>
                 <option value="">전체(기간)</option>
@@ -169,44 +258,30 @@ function List({
                 <option value="6MONTH">6개월</option>
                 <option value="1YEAR">1년</option>
               </select>
-              <select value={status} onChange={onChangeStatus}>
-                <option value="">전체(상태)</option>
-                <option value="INIT">판매중</option>
-                <option value="PURCHASE_REQUEST_RECEIVED">구매신청받음</option>
-                <option value="WAITING_FOR_DEPOSIT">입금대기중</option>
-                <option value="DONE ">입금완료</option>
-                <option value="DONE ">거래완료</option>
-                <option value="EXPIRED">기간만료</option>
-              </select>
             </div>
-          ) : null}
-          <div className="input-box">
-            <input
-              type="text"
-              value={search}
-              onChange={onChangeSearch}
-              placeholder="물품번호 검색"
-            />
-            <img src={SearchIcon} />
-          </div>
+          )}
         </div>
       </div>
       <div className="bottom-box">
         <span className="result-box">
           <em>전체결과</em>
-          <select style={{ width: "72px", border: "none" }}>
+          {/* <select
+            style={{ width: "72px", border: "none" }}
+            value={sendStatus}
+            onChange={onChangeSendStatus}
+          >
             {selected !== 2 ? (
               <>
                 <option>최신순</option>
               </>
             ) : (
               <>
-                <option>전체</option>
-                <option>입금</option>
-                <option>출금</option>
+                <option value="">전체</option>
+                <option value="DEPOSIT">입금</option>
+                <option value="WITHDRAW">출금</option>
               </>
             )}
-          </select>
+          </select> */}
         </span>
         {selected === 0 ? (
           <>
@@ -329,14 +404,14 @@ width: 100%;
       & > select {
         
         height: 32px;
-        width:50%;
+        width:100%;
         border: 1px solid  ${({ theme }) => theme.colors.grey_color};
 
        
       }
 
-      & > select:first-child {
-        margin-right: 8px;
+      & > select:nth-child(2n) {
+        margin-left: 8px;
       }
     }
   }

@@ -77,6 +77,12 @@ function BuyItem({
     setWranOpen(false);
   };
 
+  const productCode = (id: number) => {
+    const str = "00000000000" + id.toString();
+
+    return str.slice(-10);
+  };
+
   const depositF = () => {
     if (purchase) {
       setAcceptOpen(false);
@@ -175,10 +181,10 @@ function BuyItem({
         close={handleInfoClose}
         type="one"
         title="판매자 정보"
-        subChildren={<div>국민 {purchase?.buyer.phone}</div>}
+        subChildren={<div>국민 {seller.phone}</div>}
       >
         <ul>
-          <li>{purchase?.buyer.name} 님</li>
+          <li>{seller.name} 님</li>
           <li>보안등급 1 등급</li>
         </ul>
       </Modal>
@@ -191,7 +197,7 @@ function BuyItem({
       </Modal>
       <div className="title">
         <div className="left-box">
-          <span>P000258344NK</span>
+          <span>P{productCode(id)}NK</span>
           <em>등록일 : {moment(created_at).format("YYYY-MM-DD HH:mm")}</em>
         </div>
         {(status === "ON_SALE" && purchase?.status === "DEPOSIT_COMPLETED ") ||

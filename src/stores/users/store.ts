@@ -4,7 +4,7 @@ import BaseStore from "stores/BaseStore";
 import RootStore from "stores";
 import client from "lib/client";
 
-import { User, Account, UserActivity, PointType } from "./types";
+import { User, Account, UserActivity, PointType, OtherType } from "./types";
 import UserService from "services/users/UserService";
 import { Paging } from "stores/market/types";
 
@@ -34,7 +34,7 @@ class UserStore extends BaseStore {
   private _refreshToken?: string;
 
   @observable
-  private _user?: { user: User; account: Account[] };
+  private _user?: { user: User; account: Account[]; other: OtherType };
 
   @observable
   private _userAccount: Account[] = [];
@@ -132,14 +132,11 @@ class UserStore extends BaseStore {
     delete client.defaults.headers.common["Authorization"];
   }
 
-  @action
-  public checkReset() {
-    this._checkPin = false;
-  }
-
   duplicatePin = flow(function* (this: UserStore, pw: string) {
     this._init("DUPLICATE_PIN");
     try {
+      yield UserService.DuplicatePin(pw);
+
       this._checkPin = true;
 
       this._success["DUPLICATE_PIN"] = true;
@@ -147,6 +144,22 @@ class UserStore extends BaseStore {
       this._failure["DUPLICATE_PIN"] = [true, e];
     } finally {
       this._pending["DUPLICATE_PIN"] = false;
+    }
+  });
+
+  PatchPin = flow(function* (this: UserStore, pw: string) {
+    this._init("PATCH_PIN");
+
+    try {
+      yield UserService.PatchPin(pw);
+
+      this._checkPin = false;
+
+      this._success["PATCH_PIN"] = true;
+    } catch (e) {
+      this._failure["PATCH_PIN"] = [true, e];
+    } finally {
+      this._pending["PATCH_PIN"] = false;
     }
   });
 
@@ -242,12 +255,12 @@ class UserStore extends BaseStore {
       const {
         data: res,
       }: {
-        data: ApiResult<{ user: User; account: Account[] }>;
+        data: ApiResult<{ user: User; account: Account[]; other: OtherType }>;
       } = yield UserService.GetUserAPI();
 
-      const { user, account } = res.data;
+      const { user, account, other } = res.data;
 
-      this._user = { user, account };
+      this._user = { user, account, other };
       this._isLoggedIn = true;
       this._success["GET_USER"] = true;
     } catch (e) {
@@ -331,11 +344,12 @@ class UserStore extends BaseStore {
     to: string,
     type: string,
     amount: string,
+    password: number,
   ) {
     this._init("POST_SEND");
 
     try {
-      yield UserService.PostSendAPI(from, to, type, amount);
+      yield UserService.PostSendAPI(from, to, type, amount, password);
 
       this._searchUser = [];
 
@@ -347,7 +361,13 @@ class UserStore extends BaseStore {
     }
   });
 
-  GetPointList = flow(function* (this: UserStore, code: string, page?: number) {
+  GetPointList = flow(function* (
+    this: UserStore,
+    code: string,
+    page?: number,
+    query?: string,
+    status?: string,
+  ) {
     this._init("GET_POINT_LIST");
 
     try {
@@ -355,7 +375,7 @@ class UserStore extends BaseStore {
         data: res,
       }: {
         data: ApiResult<{ paging: Paging; list: PointType[] }>;
-      } = yield UserService.GetCPListAPI(code, page);
+      } = yield UserService.GetCPListAPI(code, page, query, status);
 
       const { list, paging } = res.data;
 

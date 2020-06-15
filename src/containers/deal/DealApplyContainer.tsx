@@ -41,16 +41,37 @@ class DealApplyContainer extends React.Component<Props, State> {
       const code = parse(this.MarketStore.failure["GET_AVERAGE_CONDITION"][1]);
       alert(code);
     }
+
+    await this.UserStore.GetUser();
+
+    if (this.UserStore.User) {
+      if (!this.UserStore.User.other.check_pin) {
+        alert("PIN 비밀번호 설정이 필요합니다.");
+        this.props.history.push("/mypage");
+      }
+    }
   }
 
-  postSell = async (quantity: number, price: number) => {
-    this.UserStore.checkReset();
-    await this.MarketStore.PostSell(quantity, price);
+  postSell = async (quantity: number, price: number, password: string) => {
+    await this.MarketStore.PostSell(quantity, price, password);
     if (this.MarketStore.success["POST_SELL"]) {
       this.setState({ open: true });
     } else {
       if (this.MarketStore.failure["POST_SELL"][0]) {
         const code = parse(this.MarketStore.failure["POST_SELL"][1]);
+        alert(code);
+      }
+    }
+  };
+
+  patch = async (idx: number, amount: number, price: number, password: string) => {
+    await this.MarketStore.PatchSell(idx, amount, price, password);
+
+    if (this.MarketStore.success["PATCH_SELL"]) {
+      this.setState({ open: true });
+    } else {
+      if (this.MarketStore.failure["PATCH_SELL"][0]) {
+        const code = parse(this.MarketStore.failure["PATCH_SELL"][1]);
         alert(code);
       }
     }
@@ -77,7 +98,8 @@ class DealApplyContainer extends React.Component<Props, State> {
         postSell={this.postSell}
         high={this.MarketStore.MarketInfo?.["market.condition_upper"]}
         low={this.MarketStore.MarketInfo?.["market.sale.min"]}
-        product={this.MarketStore.Product}
+        product={this.props.idx ? this.MarketStore.Product : undefined}
+        update={this.patch}
       />
     );
   }

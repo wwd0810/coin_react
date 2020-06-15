@@ -16,7 +16,7 @@ interface Props {
   accounts?: Account[];
   findUser: (type: string, query: string) => void;
   findAccounts: Account[];
-  post: (to: string, type: string, amount: string) => void;
+  post: (to: string, type: string, amount: string, password: number) => void;
 }
 
 function DealSend({
@@ -81,8 +81,8 @@ function DealSend({
     setRes(value);
   }, []);
 
-  const postSend = (price: string) => {
-    post(res, "DILLING", price);
+  const postSend = (price: string, password: number) => {
+    post(res, "DILLING", price, password);
   };
 
   useEffect(() => {
